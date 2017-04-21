@@ -28,7 +28,7 @@ class RocketBall:
         self.acceleration=Vector2f(0.,0.)
 
         self.decay=0.9
-    def __init__(self,g,mass,radius,maxthrust,leftborder,rightborder,topborder):
+    def __init__(self,g,mass,radius,maxthrust,leftborder,rightborder,topborder,enable_borders=True):
         self.g=g
         self.gvec=Vector2f(0.,0.)#Check if okay
         self.mass=mass
@@ -53,6 +53,7 @@ class RocketBall:
         self.acceleration=Vector2f(0.,0.)
 
         self.decay=0.9
+        self.enable_borders=enable_borders
 
     def placeDefault(self):
         self.position=Vector2f((self.rightborder-self.leftborder)/2.,self.topborder/2)
@@ -133,27 +134,27 @@ class RocketBall:
         nvely=hypvel.y
         nposx=hyppos.x
         nposy=hyppos.y
+        if(self.enable_borders):
+            if (ylodiff<=0) and (hypvel.y<0):
+                nvely=0.0
+                nvelx=hypvel.x*self.decay
+                nposy=self.radius
+            elif (yhidiff>=0) and (hypvel.y>0):
+                nvely=0.
+                nvelx=hypvel.x*self.decay
+                nposy=self.topborder-self.radius
 
-        if (ylodiff<=0) and (hypvel.y<0):
-            nvely=0.0
-            nvelx=hypvel.x*self.decay
-            nposy=self.radius
-        elif (yhidiff>=0) and (hypvel.y>0):
-            nvely=0.
-            nvelx=hypvel.x*self.decay
-            nposy=self.topborder-self.radius
+            xlediff=hyppos.x-(self.leftborder+self.radius)
+            xridiff=hyppos.x-(self.rightborder-self.radius)
 
-        xlediff=hyppos.x-(self.leftborder+self.radius)
-        xridiff=hyppos.x-(self.rightborder-self.radius)
-
-        if (xlediff<=0) and (hypvel.x<0):
-           nvelx=0.
-           nvely=hypvel.y*self.decay
-           nposx=self.leftborder+self.radius
-        elif (xridiff>=0) and (hypvel.x>0):
-            nvelx=0.
-            nvely=(hypvel.y*self.decay)
-            nposx=self.rightborder-self.radius
+            if (xlediff<=0) and (hypvel.x<0):
+               nvelx=0.
+               nvely=hypvel.y*self.decay
+               nposx=self.leftborder+self.radius
+            elif (xridiff>=0) and (hypvel.x>0):
+                nvelx=0.
+                nvely=(hypvel.y*self.decay)
+                nposx=self.rightborder-self.radius
 
         self.velocity.x=nvelx
         self.velocity.y=nvely

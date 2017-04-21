@@ -1,6 +1,7 @@
 from RocketBallGUI import *
 from RocketBall import RocketBall
 from SequenceGenerator import SequenceGenerator
+
 class RocketBallSequenceAnimation(RocketBallGUI):
 
     def __init__(self,rocketBall,inputs, dt=1./30.):
@@ -8,6 +9,7 @@ class RocketBallSequenceAnimation(RocketBallGUI):
         self.inputs=inputs
 
     def initGraphics(self):
+
         rocketBall.reset()
         if(len(self.inputs[0])==4):
             rocketBall.setPosition(Vector2f(self.inputs[0][2],self.inputs[0][3]))
@@ -24,11 +26,12 @@ class RocketBallSequenceAnimation(RocketBallGUI):
 if __name__ == "__main__":
     rocketBall=RocketBall.standardVersion()
 
-    TIMESTEPS=400
-    inputs=SequenceGenerator.generateCustomInputs_4tuple(rocketBall,TIMESTEPS,0.3)
-    gui=RocketBallSequenceAnimation(rocketBall,inputs)
+    TIMESTEPS=200
+    inputs=SequenceGenerator.generateCustomInputs_4tuple(rocketBall,TIMESTEPS,0.2,dt=1/50,gaussian=True)
+
 
     fig=plt.figure()
+    gui=RocketBallSequenceAnimation(rocketBall,inputs)
     fig.canvas.mpl_connect('key_press_event', gui.keypress)
     fig.canvas.mpl_connect('key_release_event',gui.keyrelease)
     anim=animation.FuncAnimation(fig,gui.animate,
