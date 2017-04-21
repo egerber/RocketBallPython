@@ -14,9 +14,6 @@ learning_rate=0.001
 beta1=0.9
 beta2=0.999
 
-rocketBall=RocketBall.standardVersion()
-
-dt=1./30.
 
 val=None
 val2=None
@@ -157,7 +154,6 @@ def createNetworkModel(data,configuration):
     val=tf.unstack(tf.transpose(val,[1,0,2]),name="unstack_LSTM")
 
     output_layer=tf.Variable(tf.random_normal([configuration["num_hidden_units"],configuration["size_output"]]),name="Weights_Output")
-    #variable_summaries(output_layer)
     output_bias=tf.Variable(tf.random_normal([1,configuration["size_output"]]))
 
     l_output=[tf.matmul(out_t,output_layer)+output_bias for out_t in val]
@@ -261,9 +257,9 @@ def trainForwardModel(inputs, outputs, configuration,count_epochs,logging=True,s
 
 if(__name__=="__main__"):
 
-    COUNT_EPOCHS=200
-    COUNT_TIMESTEPS=100
-    NUM_TRAINING=200
+    COUNT_EPOCHS=12
+    COUNT_TIMESTEPS=12
+    NUM_TRAINING=14
 
     rocketBall= RocketBall.standardVersion()
     rocketBall.enable_borders=False
@@ -279,9 +275,9 @@ if(__name__=="__main__"):
         "size_input":2,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"small_training"
+        "tag":"small_training_test"
     }
 
 
-    trainForwardModel(inputs, outputs, configuration=configuration,count_epochs=COUNT_EPOCHS,logging=True,save=True,device='/cpu:0')
+    trainForwardModel(inputs, outputs, configuration=configuration,count_epochs=COUNT_EPOCHS,logging=True,save=False,device='/cpu:0')
 
