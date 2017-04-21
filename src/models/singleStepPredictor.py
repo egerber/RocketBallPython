@@ -1,4 +1,4 @@
-from models.forwardModell1 import *
+from src.models.forwardModell1 import *
 
 class singleStepPredictor(object):
 

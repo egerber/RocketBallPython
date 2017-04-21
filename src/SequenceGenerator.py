@@ -1,5 +1,5 @@
 import numpy as np
-from RocketBall import *
+from src.RocketBall import *
 import copy
 
 class SequenceGenerator:

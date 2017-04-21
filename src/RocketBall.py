@@ -1,5 +1,5 @@
 import numpy as np
-from Vector2f import *
+from src.Vector2f import *
 
 
 

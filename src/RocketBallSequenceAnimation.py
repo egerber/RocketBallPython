@@ -1,6 +1,6 @@
-from RocketBallGUI import *
-from RocketBall import RocketBall
-from SequenceGenerator import SequenceGenerator
+from src.RocketBallGUI import *
+from src.RocketBall import RocketBall
+from src.SequenceGenerator import SequenceGenerator
 
 class RocketBallSequenceAnimation(RocketBallGUI):
 
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     rocketBall=RocketBall.standardVersion()
 
     TIMESTEPS=200
-    inputs=SequenceGenerator.generateCustomInputs_4tuple(rocketBall,TIMESTEPS,0.2,dt=1/50,gaussian=True)
+    inputs=SequenceGenerator.generateCustomInputs_4tuple(rocketBall,TIMESTEPS,0.2,dt=1/30,gaussian=True)
 
 
     fig=plt.figure()

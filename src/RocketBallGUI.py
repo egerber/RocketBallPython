@@ -3,7 +3,7 @@ from matplotlib import animation
 from matplotlib.patches import Ellipse
 from matplotlib.patches import Rectangle
 from matplotlib import colors
-from RocketBall import *
+from src.RocketBall import *
 
 class RocketBallGUI:
 
