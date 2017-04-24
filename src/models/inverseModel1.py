@@ -6,48 +6,139 @@ from tensorflow.python.ops import variable_scope as vs
 import time
 from src.models.helper import *
 import os
-from src.models.forwardModell1 import *
+from src.models.forwardModel import forwardModel
+
+class inverseModel:
+
+    def __init__(self,configuration):
+        self.epsilon=10**(-8)
+        self.learning_rate=0.01
+        self.beta1=0.9
+        self.beta2=0.9
+
+        self.configuration=configuration
+        self.inputs=None #Variable
+        self.outputs=None #Placeholder
+
+    def create(self,count_timesteps,device='/cpu:0'):
+        t_begin=time.time()
+
+        self.inputs=tf.Variable(tf.random_uniform([1,count_timesteps,self.configuration["size_input"]],minval=0.,maxval=1.))
+        self.target=tf.placeholder(tf.float32,[1,count_timesteps,self.configuration["size_output"]])
+
+        lstm_outputs=[]
+        cell=None
+
+        with vs.variable_scope("network"):
+            if(self.configuration["cell_type"]=="LSTMCell"):
+                cell=tf.contrib.rnn.LSTMCell(num_units=self.configuration["num_hidden_units"],use_peepholes=self.configuration["use_peepholes"],state_is_tuple=True)
+            elif(self.configuration["cell_type"]=="GRUCell"):
+                cell=tf.contrib.rnn.GRUCell(num_units=self.configuration["num_hidden_units"])
+            elif(self.configuration["cell_type"]=="RNNCell"):
+                cell=tf.contrib.rnn.RNNCell(num_units=self.configuration["num_hidden_units"])
+            elif(self.configuration["cell_type"]=="BasicLSTMCell"):
+                cell=tf.contrib.rnn.LSTMCell(num_hidden_units=self.configuration["num_hidden_units"],state_is_tuple=True)
+
+            inputData=tf.unstack(tf.transpose(self.inputs,[1,0,2]))
+
+            state=None
+            with vs.variable_scope("LSTM") as lstm_scope:
+                initial_state=cell.zero_state(1,tf.float32)
+                lstm_output,state=cell(inputData[0],initial_state,lstm_scope)
+                lstm_outputs.append(lstm_output)
+            with vs.variable_scope("LSTM",reuse=True) as lstm_scope:
+                for index,inp in enumerate(inputData[1:]):
+                    lstm_output,state=cell(inp,state,lstm_scope)
+                    lstm_outputs.append(lstm_output)
+
+            with vs.variable_scope("OUTPUT"):
+
+                output_layer=vs.get_variable("weights_output",
+                                             [self.configuration["num_hidden_units"],self.configuration["size_output"]],
+                                             initializer=tf.random_normal_initializer())
+                if(self.configuration["use_biases"]):
+                    biases_outputs=vs.get_variable("biases_output",[1,self.configuration["size_output"]],
+                                                   initializer=tf.random_normal_initializer())
+                    outputs=[tf.matmul(out_t,output_layer,name="Multiply_lstm_output")+biases_outputs for out_t in lstm_outputs]
+                else:
+                    outputs=[tf.matmul(out_t,output_layer,name="Multiply_lstm_output") for out_t in lstm_outputs]
+
+                outputs=tf.transpose(outputs,[1,0,2],"Transpose_output")
+
+            self.outputs=outputs
+
+            with vs.variable_scope("LossCalculation") as loss:
+                self.rmse=tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(self.target,self.outputs)),axis=2),name="RMSE")
+                self.mse=tf.multiply(0.5,tf.reduce_sum(tf.square(tf.subtract(self.target,self.outputs)),axis=2),name="MSE")
+
+                self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate,
+                                               beta1=self.beta1,
+                                               beta2=self.beta2,
+                                               epsilon=self.epsilon,name="MSE_OPTIMIZER")
+
+                self.gradients=self.optimizer.compute_gradients(self.mse,var_list=[self.inputs])
+                self.minimizer=self.optimizer.apply_gradients(self.gradients)
 
 
-def createInverseModel2(data,configuration):
-    global l_output
-    outputs=[]
-    cell=None
-
-    if(configuration["cell_type"]=="LSTMCell"):
-        cell=tf.contrib.rnn.LSTMCell(num_units=configuration["num_hidden_units"],use_peepholes=configuration["use_peepholes"],state_is_tuple=True)
-    elif(configuration["cell_type"]=="GRUCell"):
-        cell=tf.contrib.rnn.GRUCell(num_units=configuration["num_hidden_units"])
-    elif(configuration["cell_type"]=="RNNCell"):
-        cell=tf.contrib.rnn.RNNCell(num_units=configuration["num_hidden_units"])
-    elif(configuration["cell_type"]=="BasicLSTMCell"):
-        cell=tf.contrib.rnn.LSTMCell(num_hidden_units=configuration["num_hidden_units"],state_is_tuple=True)
+        t_end=time.time()
+        print("Network Creation Done! (time: " + str(t_end-t_begin) + ")")
 
 
-    inputData=tf.unstack(tf.transpose(data,[1,0,2]))
 
-    state=None
-    with vs.variable_scope("LSTM") as lstm_scope:
-        initial_state=cell.zero_state(1,tf.float32)
-        output,state=cell(inputData[0],initial_state,lstm_scope)
-        outputs.append(output)
-    with vs.variable_scope("LSTM",reuse=True) as lstm_scope:
-        for index,inp in enumerate(inputData[1:]):
-            output,state=cell(inp,state,lstm_scope)
-            outputs.append(output)
+    def restore(self,path):
+        t_begin=time.time()
 
-    with vs.variable_scope("OUTPUT"):
+        #1st: initialize all variables (includes optimizer variables)
+        sess=tf.Session()
+        sess.run(tf.global_variables_initializer())
+        #2nd: set weights from pretrained model
+        with vs.variable_scope("network",reuse=True) as scope:
+            #with vs.variable_scope("OUTPUT",reuse=True) as scope:
+            self.saver=tf.train.Saver(var_list={"OUTPUT/weights_output":vs.get_variable("OUTPUT/weights_output"),
+                                            "LSTM/w_f_diag": vs.get_variable("LSTM/w_f_diag"),
+                                            "LSTM/w_i_diag": vs.get_variable("LSTM/w_i_diag"),
+                                            "LSTM/w_o_diag": vs.get_variable("LSTM/w_o_diag"),
+                                            "LSTM/biases": vs.get_variable("LSTM/biases"),
+                                            "LSTM/weights": vs.get_variable("LSTM/weights")})
+        self.saver.restore(sess,path)
 
-        output_layer=tf.Variable(tf.random_normal([configuration["num_hidden_units"],configuration["size_output"]]),name="Weights_output")
-        if(configuration["use_biases"]):
-            biases_outputs=tf.Variable(tf.random_normal([1,configuration["size_output"]]))
-            l_output=[tf.matmul(out_t,output_layer,name="Multiply_lstm_output")+biases_outputs for out_t in outputs]
-        else:
-            l_output=[tf.matmul(out_t,output_layer,name="Multiply_lstm_output") for out_t in outputs]
+        self.sess=sess
+        print("Restoring Done! (time: " + str(time.time()-t_begin)+ ")")
 
-        l_output=tf.transpose(l_output,[1,0,2],"Transpose_output")
+    def __call__(self,target_outputs,count_iterations):
+
+        for i in range(count_iterations):
+            i,o,_,r,g=self.sess.run([self.inputs,self.outputs,self.minimizer,self.rmse,self.gradients],feed_dict={self.target:[target_outputs]})
+            print("Gradients",g)
+            print("...")
+            print(i)
+        return i
 
 
-    return l_output
+if __name__=='__main__':
+    COUNT_ITERATIONS=500
+    COUNT_TIMESTEPS=12
+    NUM_TRAINING=14
 
-def inferInputs(output,timesteps,configuration,count_iterations):
+    rocketBall= RocketBall.standardVersion()
+    rocketBall.enable_borders=False
+
+
+    configuration={
+        "cell_type":"LSTMCell",
+        "num_hidden_units": 16,
+        "size_output":2,
+        "size_input":2,
+        "use_biases":True,
+        "use_peepholes":True,
+        "tag":"relative_noborders2"
+    }
+
+    outputs=[[0]*configuration["size_input"] for i in range(COUNT_TIMESTEPS)]
+    path=checkpointDirectory=os.path.dirname(__file__)+"/../../data/checkpoints/"+createConfigurationString(configuration)+".chkpt"
+
+    iModel=inverseModel(configuration)
+    iModel.create(COUNT_TIMESTEPS,'/cpu:0')
+    iModel.restore(path)
+    print(iModel(outputs,count_iterations=COUNT_ITERATIONS))
+

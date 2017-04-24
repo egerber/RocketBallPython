@@ -1,12 +1,12 @@
-from src.models.forwardModell1 import *
+
+from src.models import forwardModel
 
 class forwardPredictor(object):
 
     def __init__(self,configuration,count_timesteps,restorePath):
-        self.data=tf.placeholder(tf.float32,[1,count_timesteps,configuration["size_input"]])
-
-        self.output=createNetworkModel2(self.data,configuration)
-        self.sess=restoreNetwork(restorePath)
+        self.forwardModel=forwardModel(self.configuration)
+        self.forwardModel.create(count_timesteps)
+        self.forwardModel.restore(restorePath)
 
     def __call__(self,inputs):
 

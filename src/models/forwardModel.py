@@ -18,12 +18,28 @@ class forwardModel:
         self.beta1=0.9
         self.beta2=0.999
 
+
+        self.saver=None
         self.outputs=None
         self.sess=None
         self.configuration=configuration
         self.data=None
         self.target=None
 
+    @staticmethod
+    def createNew(configuration,count_timesteps,device='/cpu:0'):
+        fmodel=forwardModel(configuration)
+        fmodel.create(count_timesteps,device)
+        fmodel.init()
+        return fmodel
+
+    @staticmethod
+    def createFromOld(configuration,count_timesteps,file_path,device='/cpu:0'):
+        fmodel=forwardModel(configuration)
+        fmodel.create(count_timesteps,device)
+        fmodel.restore(file_path)
+
+        return fmodel
 
     def writeSummary(self,tensor,name):
         mean=tf.reduce_mean(tensor)
@@ -38,42 +54,47 @@ class forwardModel:
     def create(self,count_timesteps,device='/cpu:0'):
         t_begin=time.time()
 
-        self.data=tf.placeholder(tf.float32,[1,count_timesteps,configuration["size_input"]])
-        self.target=tf.placeholder(tf.float32,[1,count_timesteps,configuration["size_output"]])
+        self.data=tf.placeholder(tf.float32,[1,count_timesteps,self.configuration["size_input"]])
+        self.target=tf.placeholder(tf.float32,[1,count_timesteps,self.configuration["size_output"]])
         lstm_outputs=[]
         cell=None
-        if(configuration["cell_type"]=="LSTMCell"):
-            cell=tf.contrib.rnn.LSTMCell(num_units=configuration["num_hidden_units"],use_peepholes=configuration["use_peepholes"],state_is_tuple=True)
-        elif(configuration["cell_type"]=="GRUCell"):
-            cell=tf.contrib.rnn.GRUCell(num_units=configuration["num_hidden_units"])
-        elif(configuration["cell_type"]=="RNNCell"):
-            cell=tf.contrib.rnn.RNNCell(num_units=configuration["num_hidden_units"])
-        elif(configuration["cell_type"]=="BasicLSTMCell"):
-            cell=tf.contrib.rnn.LSTMCell(num_hidden_units=configuration["num_hidden_units"],state_is_tuple=True)
+        with vs.variable_scope("network"):
+
+            if(self.configuration["cell_type"]=="LSTMCell"):
+                cell=tf.contrib.rnn.LSTMCell(num_units=self.configuration["num_hidden_units"],use_peepholes=self.configuration["use_peepholes"],state_is_tuple=True)
+            elif(self.configuration["cell_type"]=="GRUCell"):
+                cell=tf.contrib.rnn.GRUCell(num_units=self.configuration["num_hidden_units"])
+            elif(self.configuration["cell_type"]=="RNNCell"):
+                cell=tf.contrib.rnn.RNNCell(num_units=self.configuration["num_hidden_units"])
+            elif(self.configuration["cell_type"]=="BasicLSTMCell"):
+                cell=tf.contrib.rnn.LSTMCell(num_hidden_units=self.configuration["num_hidden_units"],state_is_tuple=True)
 
 
-        inputData=tf.unstack(tf.transpose(self.data,[1,0,2]))
+            inputData=tf.unstack(tf.transpose(self.data,[1,0,2]))
 
-        state=None
-        with vs.variable_scope("LSTM") as lstm_scope:
-            initial_state=cell.zero_state(1,tf.float32)
-            lstm_output,state=cell(inputData[0],initial_state,lstm_scope)
-            lstm_outputs.append(lstm_output)
-        with vs.variable_scope("LSTM",reuse=True) as lstm_scope:
-            for index,inp in enumerate(inputData[1:]):
-                lstm_output,state=cell(inp,state,lstm_scope)
+            state=None
+            with vs.variable_scope("LSTM") as lstm_scope:
+                initial_state=cell.zero_state(1,tf.float32)
+                lstm_output,state=cell(inputData[0],initial_state,lstm_scope)
                 lstm_outputs.append(lstm_output)
+            with vs.variable_scope("LSTM",reuse=True) as lstm_scope:
+                for index,inp in enumerate(inputData[1:]):
+                    lstm_output,state=cell(inp,state,lstm_scope)
+                    lstm_outputs.append(lstm_output)
 
-        with vs.variable_scope("OUTPUT"):
+            with vs.variable_scope("OUTPUT"):
 
-            output_layer=tf.Variable(tf.random_normal([configuration["num_hidden_units"],configuration["size_output"]]),name="Weights_output")
-            if(configuration["use_biases"]):
-                biases_outputs=tf.Variable(tf.random_normal([1,configuration["size_output"]]))
-                outputs=[tf.matmul(out_t,output_layer,name="Multiply_lstm_output")+biases_outputs for out_t in lstm_outputs]
-            else:
-                outputs=[tf.matmul(out_t,output_layer,name="Multiply_lstm_output") for out_t in lstm_outputs]
+                output_layer=vs.get_variable("weights_output",
+                                             [self.configuration["num_hidden_units"],self.configuration["size_output"]],
+                                             initializer=tf.random_normal_initializer())
+                if(self.configuration["use_biases"]):
+                    biases_outputs=vs.get_variable("biases_output",[1,self.configuration["size_output"]],
+                                                   initializer=tf.random_normal_initializer())
+                    outputs=[tf.matmul(out_t,output_layer,name="Multiply_lstm_output")+biases_outputs for out_t in lstm_outputs]
+                else:
+                    outputs=[tf.matmul(out_t,output_layer,name="Multiply_lstm_output") for out_t in lstm_outputs]
 
-            outputs=tf.transpose(outputs,[1,0,2],"Transpose_output")
+                outputs=tf.transpose(outputs,[1,0,2],"Transpose_output")
 
         self.outputs=outputs
 
@@ -159,20 +180,37 @@ class forwardModel:
 
     def save(self,path):
         if(self.saver is None):
-            self.saver=tf.train.Saver()
+            with vs.variable_scope("network",reuse=True):
+                self.saver=tf.train.Saver(var_list={"OUTPUT/weights_output":vs.get_variable("OUTPUT/weights_output"),
+                                                               "LSTM/w_f_diag": vs.get_variable("LSTM/w_f_diag"),
+                                                               "LSTM/w_i_diag": vs.get_variable("LSTM/w_i_diag"),
+                                                               "LSTM/w_o_diag": vs.get_variable("LSTM/w_o_diag"),
+                                                               "LSTM/biases": vs.get_variable("LSTM/biases"),
+                                                               "LSTM/weights": vs.get_variable("LSTM/weights")})
+
 
         self.saver.save(self.sess, path)
 
+    #runs several inputs and returns outputs
+    def __call__(self,inputs):
+        prediction=self.sess.run(self.outputs,feed_dict={self.data:[inputs]})
+        return prediction[0]
+
+    #runs one timestep of a network and returns output
+    def runSingleTimestep(self,input):
+        pass
+
+
 if __name__=='__main__':
-    COUNT_EPOCHS=12
-    COUNT_TIMESTEPS=12
-    NUM_TRAINING=14
+    COUNT_EPOCHS=40
+    COUNT_TIMESTEPS=50
+    NUM_TRAINING=1000
 
     rocketBall= RocketBall.standardVersion()
     rocketBall.enable_borders=False
 
     inputs=[SequenceGenerator.generateCustomInputs_2tuple(COUNT_TIMESTEPS,0.25) for i in range(NUM_TRAINING)]
-    outputs=[SequenceGenerator.runInputs_2tuple(rocketBall,input,1./30.) for input in inputs]
+    outputs=[SequenceGenerator.runInputs_2tuple_delta(rocketBall,input,1./30.) for input in inputs]
 
 
     configuration={
@@ -182,12 +220,13 @@ if __name__=='__main__':
         "size_input":2,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"small_training_test"
+        "tag":"test"
     }
 
 
-    fmodel=forwardModel(configuration)
-    fmodel.create(COUNT_TIMESTEPS,'/cpu:0')
-    fmodel.init()
-    fmodel.train(inputs, outputs,count_epochs=COUNT_EPOCHS,logging=True,save=False)
+    fmodel=forwardModel.createNew(configuration,COUNT_TIMESTEPS)
+    path=os.path.dirname(__file__)+"/../../data/checkpoints/"+createConfigurationString(configuration)+".chkpt"
+    #fmodel.restore(path)
+    #print(fmodel.sess.run(tf.global_variables()))
+    fmodel.train(inputs, outputs,count_epochs=COUNT_EPOCHS,logging=True,save=True)
 
