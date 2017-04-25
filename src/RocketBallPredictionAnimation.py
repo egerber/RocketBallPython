@@ -31,9 +31,6 @@ class RocketBallPredictionAnimation(RocketBallGUI):
         rocketBall.reset()
         self.predictor.reset()
 
-        if(len(self.inputs[0])==4):
-            rocketBall.setPosition(Vector2f(self.inputs[0][2],self.inputs[0][3]))
-
         RocketBallGUI.initGraphics(self)
         self.predicted_robot.set_facecolor((1.,0.,0.))
 
@@ -45,7 +42,7 @@ class RocketBallPredictionAnimation(RocketBallGUI):
         self.rocketBall.setThrust2(self.inputs[i,1])
 
         #make prediction before new position is calculated
-        prediction=predictor([self.inputs[i][0],self.inputs[i][1]])[0]
+        prediction=predictor(self.inputs[i])[0]
         print(prediction)
         if(self.relative):
             prediction[0]+=rocketBall.position.x
@@ -61,7 +58,7 @@ class RocketBallPredictionAnimation(RocketBallGUI):
 
 if __name__ == "__main__":
     rocketBall=RocketBall.standardVersion()
-    rocketBall.enable_borders=True
+    rocketBall.enable_borders=False
     TIMESTEPS=100
 
 
@@ -69,10 +66,10 @@ if __name__ == "__main__":
         "cell_type":"LSTMCell",
         "num_hidden_units": 16,
         "size_output":2,
-        "size_input":2,
+        "size_input":4,
         "use_biases":True,
         "use_peepholes":True,
-        "tag": "noborders_relative"
+        "tag": "relative_noborders"
     }
 
 
@@ -80,11 +77,11 @@ if __name__ == "__main__":
     predictor=singleStepForwardModel.createFromOld(configuration,path)
 
     anim=None
-    inputs=SequenceGenerator.generateCustomInputs_2tuple(TIMESTEPS,0.25)
+    inputs=SequenceGenerator.generateCustomInputs_4tuple_relative(rocketBall,TIMESTEPS,0.25)
     def resetAnimation(gui):
         global anim
         rocketBall.reset()
-        inputs=SequenceGenerator.generateCustomInputs_2tuple(TIMESTEPS,0.25)
+        inputs=SequenceGenerator.generateCustomInputs_4tuple_relative(rocketBall,TIMESTEPS,0.25)
         gui.predictor.reset()
 
         gui.inputs=inputs
@@ -98,13 +95,11 @@ if __name__ == "__main__":
 
     fig=plt.figure()
 
-    gui=RocketBallPredictionAnimation(rocketBall,inputs,predictor,relative=False)
+    gui=RocketBallPredictionAnimation(rocketBall,inputs,predictor,relative=True)
     fig.canvas.mpl_connect('key_press_event', gui.keypress)
     fig.canvas.mpl_connect('key_release_event',gui.keyrelease)
     fig.canvas.mpl_connect('button_press_event',lambda event: resetAnimation(gui))
 
-    #resetAnimation(gui)
-    #anim=resetAnimation(gui)
-    #plt.show()
-    for i in range(100):
-        print(predictor([0.,0.]))
+    resetAnimation(gui)
+    anim=resetAnimation(gui)
+    plt.show()

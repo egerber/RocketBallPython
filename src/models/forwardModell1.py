@@ -257,9 +257,9 @@ def trainForwardModel(inputs, outputs, configuration,count_epochs,logging=True,s
 
 if(__name__=="__main__"):
 
-    COUNT_EPOCHS=12
-    COUNT_TIMESTEPS=12
-    NUM_TRAINING=14
+    COUNT_EPOCHS=31
+    COUNT_TIMESTEPS=100
+    NUM_TRAINING=2000
 
     rocketBall= RocketBall.standardVersion()
     rocketBall.enable_borders=False

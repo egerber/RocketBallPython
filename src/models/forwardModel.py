@@ -212,15 +212,15 @@ class forwardModel:
 
 
 if __name__=='__main__':
-    COUNT_EPOCHS=120
-    COUNT_TIMESTEPS=100
-    NUM_TRAINING=100
+    COUNT_EPOCHS=31
+    COUNT_TIMESTEPS=80
+    NUM_TRAINING=2000
 
     rocketBall= RocketBall.standardVersion()
     rocketBall.enable_borders=False
 
-    inputs=[SequenceGenerator.generateCustomInputs_2tuple(COUNT_TIMESTEPS,0.25) for i in range(NUM_TRAINING)]
-    outputs=[SequenceGenerator.runInputs_relative_2tuple(rocketBall,input,1./30.) for input in inputs]
+    inputs=[SequenceGenerator.generateCustomInputs_2tuple_negative(COUNT_TIMESTEPS,0.25) for i in range(NUM_TRAINING)]
+    outputs=[SequenceGenerator.runInputs_2tuple_relative(rocketBall,input,1./30.) for input in inputs]
 
 
     configuration={
@@ -230,7 +230,7 @@ if __name__=='__main__':
         "size_input":2,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"relative_test"
+        "tag":"relative_noborders_allownegative"
     }
 
 

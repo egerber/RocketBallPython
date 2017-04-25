@@ -1,7 +1,10 @@
 import numpy as np
 from src.Vector2f import *
 
+import math
 
+def sigmoid(x):
+    return 1 / (1 + math.exp(-x))
 
 class RocketBall:
 
@@ -54,6 +57,7 @@ class RocketBall:
 
         self.decay=0.9
         self.enable_borders=enable_borders
+        self.use_sigmoid=False
 
     def placeDefault(self):
         self.position=Vector2f((self.rightborder-self.leftborder)/2.,self.topborder/2)
@@ -103,8 +107,12 @@ class RocketBall:
     def update(self,dt=1./30.):
         self.computeGravityForceVec(self.mass,self.g,self.gvec)
 
-        self.thrust1=np.clip(self.thrust1,0.,1.)
-        self.thrust2=np.clip(self.thrust2,0.,1.)
+        if(self.use_sigmoid):
+            self.thrust1=sigmoid(self.thrust1)
+            self.thrust2=sigmoid(self.thrust2)
+        else:
+            self.thrust1=np.clip(self.thrust1,0.,1.)
+            self.thrust2=np.clip(self.thrust2,0.,1.)
 
         self.thrust1dir=Vector2f.normalize(self.thrust1dir)
         self.thrust2dir=Vector2f.normalize(self.thrust2dir)

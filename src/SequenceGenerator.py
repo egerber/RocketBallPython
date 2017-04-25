@@ -13,8 +13,13 @@ class SequenceGenerator:
         return np.clip(np.random.normal(loc=mean, scale=std, size=(timesteps, 2)), a_min=0., a_max=1.)
 
     @staticmethod
-    def generateCustomInputs_2tuple(timesteps, changingProbability):
-        inputs=np.random.rand(timesteps,2)
+    def generateCustomInputs_2tuple(timesteps, changingProbability,gaussian=False,mean=0.5,std=0.1):
+
+        if(gaussian):
+            inputs=np.random.normal(loc=mean,scale=std,size=(timesteps,2))
+        else:
+            inputs=np.random.rand(timesteps,2)
+
         for i in range(1,timesteps):
             #do not change input for thrust1
             if(np.random.rand()>changingProbability):
@@ -24,6 +29,8 @@ class SequenceGenerator:
                 inputs[i][1]=inputs[i-1][1]
 
         return inputs
+
+
 
     @staticmethod
     def runInput(self):
@@ -68,6 +75,63 @@ class SequenceGenerator:
             #add Position to next Input
             inputs[i+1][2]=nextPosition.x
             inputs[i+1][3]=nextPosition.y
+
+
+        return inputs
+
+    #0=thrust1
+    #1=thrust2
+    #2=delta_x
+    #3=delta_y
+    @staticmethod
+    def generateCustomInputs_4tuple_relative(rocketBall, timesteps, changingProbability, dt=1. / 30.,gaussian=False):
+        rocketBall.reset()
+
+
+        #choose random initial Position on the field (considers radius of rocketBall)
+        initial_velocity=Vector2f(np.random.uniform(low=-0.05,
+                                                   high=0.05),
+                              np.random.uniform(low=-0.05,
+                                                   high=0.05))
+        rocketBall.placeDefault()
+
+        if gaussian:
+            inputs=np.random.normal(loc=0.6,scale=0.2,size=(timesteps,4))
+        else:
+            inputs=np.random.rand(timesteps,4) # indices 0,1 are inputs, indices 2,3 are x and y position
+
+        for i in range(1,timesteps):
+            inputs[i][2:4]=[0.,0.]
+        for i in range(1,timesteps):
+            #do not change input for thrust1
+            if(np.random.rand()>changingProbability):
+                inputs[i][0]=inputs[i-1][0]
+            #do not change input for thrust2
+            if(np.random.rand()>changingProbability):
+                inputs[i][1]=inputs[i-1][1]
+
+        #set intial Position as First
+        #inputs[0][2]=initial_velocity.x
+        #inputs[0][3]=initial_velocity.y
+
+        prevPosition=Vector2f(0.,0.)
+        prevPosition.x=rocketBall.position.x
+        prevPosition.y=rocketBall.position.y
+        for i in range(0, timesteps-1):
+
+            rocketBall.setThrust1(inputs[i][0])
+            rocketBall.setThrust2(inputs[i][1])
+            #run Input
+            rocketBall.update(dt)
+            #get Position
+            nextPosition=rocketBall.getPosition()
+            #add Position to next Input
+            inputs[i+1][2]=nextPosition.x-prevPosition.x
+            inputs[i+1][3]=nextPosition.y-prevPosition.y
+            prevPosition.x=nextPosition.x
+            prevPosition.y=nextPosition.y
+
+
 
 
         return inputs
@@ -142,7 +206,7 @@ class SequenceGenerator:
         return outputs
 
     @staticmethod
-    def runInputs_relative_2tuple(rocketBall,inputs,dt=1./30.):
+    def runInputs_2tuple_relative(rocketBall,inputs,dt=1./30.):
         rocketBall.reset()
 
         outputs=np.empty((len(inputs),2))
@@ -169,6 +233,45 @@ class SequenceGenerator:
             #assignin new x and y coordinates (Warning: assigning prevPosition=nextPosition causes mistakes)
             prevPosition.x=nextPosition.x
             prevPosition.y=nextPosition.y
+
+        return outputs
+
+    @staticmethod
+    def runInputs_4tuple_relative(rocketBall,inputs,dt=1./30.):
+        rocketBall.reset()
+
+        outputs=np.empty((len(inputs),4))
+
+
+        rocketBall.placeDefault()
+
+
+        prevPosition=Vector2f(0.,0.)
+        prevPosition.x=rocketBall.position.x
+        prevPosition.y=rocketBall.position.y
+        prevDelta=Vector2f(0.,0.)
+        prevDelta.x=0.
+        prevDelta.y=0.
+
+        for index,input in enumerate(inputs):
+            rocketBall.setThrust1(input[0])
+            rocketBall.setThrust2(input[1])
+
+            rocketBall.update(dt)
+            nextPosition=rocketBall.getPosition()
+
+            deltax=nextPosition.x-prevPosition.x
+            deltay=nextPosition.y-prevPosition.y
+            outputs[index][0]=deltax
+            outputs[index][1]=deltay
+            outputs[index][2]=deltax-prevDelta.x
+            outputs[index][3]=deltay-prevDelta.y
+
+            #assignin new x and y coordinates (Warning: assigning prevPosition=nextPosition causes mistakes)
+            prevPosition.x=nextPosition.x
+            prevPosition.y=nextPosition.y
+            prevDelta.x=deltax
+            prevDelta.y=deltay
 
         return outputs
 
@@ -272,6 +375,7 @@ class SequenceGenerator:
             prevVelocity.y=rocketBall.velocity.y
 
         return outputs
+
     @staticmethod
     def test4tuple(rocketBall,inputs,outputs,dt):
         rocketBall.reset()
@@ -284,8 +388,6 @@ class SequenceGenerator:
             nextPosition=rocketBall.getPosition()
             if(not(nextPosition.x==output[0]) or not (nextPosition.y==output[1])):
                 print("Error in input/output pair")
-
-
 
     @staticmethod
     def test2tuple(rocketBall,inputs,outputs,dt):
@@ -300,15 +402,12 @@ class SequenceGenerator:
                 print("Error in input/output pair")
 
 
-
-
 if __name__=="__main__":
     rocketBall=RocketBall.standardVersion()
     rocketBall.enable_borders=False
-    inputs=SequenceGenerator.generateCustomInputs_2tuple(timesteps=200, changingProbability=0.3)
+    inputs=SequenceGenerator.generateCustomInputs_2tuple_negative(timesteps=10, changingProbability=0.3)
 
-    #rocketBall=rocketBall.standardVersion()
-    outputs=SequenceGenerator.runInputs_2tuple(rocketBall,inputs=inputs,dt=1./30.)
-    outputs_delta=SequenceGenerator.runInputs_2tuple_delta(rocketBall,inputs=inputs,dt=1./30.)
+    outputs=SequenceGenerator.runInputs_2tuple_relative(rocketBall,inputs=inputs,dt=1./30.)
 
-    print(outputs_delta)
+    print(inputs)
+    print(outputs)

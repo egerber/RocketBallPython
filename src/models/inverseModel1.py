@@ -76,9 +76,9 @@ class inverseModel:
                                                beta2=self.beta2,
                                                epsilon=self.epsilon,name="MSE_OPTIMIZER")
 
-                self.gradients=self.optimizer.compute_gradients(self.mse,var_list=[self.inputs])
-                self.gradients= [(tf.clip_by_value(grad,0.,1.),var) for grad, var in self.gradients]
-                self.minimizer=self.optimizer.apply_gradients(self.gradients)
+                self.minimizer=self.optimizer.minimize(self.mse,var_list=[self.inputs])
+
+                self.clippingOperation=self.inputs.assign(tf.clip_by_value(self.inputs, 0.1,0.9))
 
 
         t_end=time.time()
@@ -109,15 +109,15 @@ class inverseModel:
     def __call__(self,target_outputs,count_iterations):
 
         for i in range(count_iterations):
-            o,_,r,g=self.sess.run([self.outputs,self.minimizer,self.rmse,self.gradients],feed_dict={self.target:[target_outputs]})
-            print("Gradients",g)
+            i,o,r,_=self.sess.run([self.inputs,self.outputs,self.rmse,self.minimizer],feed_dict={self.target:[target_outputs]})
+            print(i)
+            print("outputs:",o)
         return i
 
 
 if __name__=='__main__':
-    COUNT_ITERATIONS=500
-    COUNT_TIMESTEPS=12
-    NUM_TRAINING=14
+    COUNT_ITERATIONS=100
+    COUNT_TIMESTEPS=10
 
     rocketBall= RocketBall.standardVersion()
     rocketBall.enable_borders=False
@@ -126,22 +126,13 @@ if __name__=='__main__':
     configuration={
         "cell_type":"LSTMCell",
         "num_hidden_units": 16,
-        "size_output":6,
+        "size_output":2,
         "size_input":2,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"relative_noborders2"
+        "tag":"relative_noborders_negative"
     }
 
-    configuration={
-        "cell_type":"LSTMCell",
-        "num_hidden_units": 16,
-        "size_output":6,
-        "size_input":2,
-        "use_biases":True,
-        "use_peepholes":True,
-        "tag":"relative"
-    }
 
     outputs=[[0]*configuration["size_output"] for i in range(COUNT_TIMESTEPS)]
     path=checkpointDirectory=os.path.dirname(__file__)+"/../../data/checkpoints/"+createConfigurationString(configuration)+".chkpt"

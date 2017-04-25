@@ -25,19 +25,38 @@ class RocketBallSequenceAnimation(RocketBallGUI):
 
 if __name__ == "__main__":
     rocketBall=RocketBall.standardVersion()
+    rocketBall.enable_borders=False
+    rocketBall.use_sigmoid
 
-    TIMESTEPS=200
-    inputs=SequenceGenerator.generateCustomInputs_4tuple(rocketBall,TIMESTEPS,0.2,dt=1/30,gaussian=True)
+    TIMESTEPS=100
 
 
+    inputs=SequenceGenerator.generateCustomInputs_2tuple(TIMESTEPS,0.1,gaussian=True,mean=0.65,std=0.4)
+    anim=None
+
+    def resetAnimation(gui):
+        global anim
+        rocketBall.reset()
+        inputs=SequenceGenerator.generateCustomInputs_2tuple(TIMESTEPS,0.7,gaussian=True,mean=0.57555,std=0.1)
+
+        gui.inputs=inputs
+        if(not anim is None):
+            anim._stop()
+        anim=animation.FuncAnimation(fig,gui.animate,
+                                     init_func=gui.initGraphics,
+                                     frames=TIMESTEPS-1,
+                                     interval=40.)
+        anim._start()
     fig=plt.figure()
     gui=RocketBallSequenceAnimation(rocketBall,inputs)
+
     fig.canvas.mpl_connect('key_press_event', gui.keypress)
     fig.canvas.mpl_connect('key_release_event',gui.keyrelease)
-    anim=animation.FuncAnimation(fig,gui.animate,
-                                 init_func=gui.initGraphics,
-                                 frames=TIMESTEPS,
-                                 interval=30.)
+    fig.canvas.mpl_connect('button_press_event',lambda event: resetAnimation(gui))
+
+    resetAnimation(gui)
+    anim=resetAnimation(gui)
+    plt.show()
 
 
     plt.show()
