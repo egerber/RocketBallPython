@@ -83,7 +83,6 @@ class forwardModel:
                     lstm_outputs.append(lstm_output)
 
             with vs.variable_scope("OUTPUT"):
-
                 output_layer=vs.get_variable("weights_output",
                                              [self.configuration["num_hidden_units"],self.configuration["size_output"]],
                                              initializer=tf.random_normal_initializer())
@@ -171,8 +170,19 @@ class forwardModel:
 
     def restore(self,path):
         t_begin=time.time()
+
+        #1st: initialize all variables (includes optimizer variables)
         sess=tf.Session()
-        self.saver=tf.train.Saver()
+        sess.run(tf.global_variables_initializer())
+        #2nd: set weights from pretrained model
+        with vs.variable_scope("network",reuse=True) as scope:
+            #with vs.variable_scope("OUTPUT",reuse=True) as scope:
+            self.saver=tf.train.Saver(var_list={"OUTPUT/weights_output":vs.get_variable("OUTPUT/weights_output"),
+                                                "LSTM/w_f_diag": vs.get_variable("LSTM/w_f_diag"),
+                                                "LSTM/w_i_diag": vs.get_variable("LSTM/w_i_diag"),
+                                                "LSTM/w_o_diag": vs.get_variable("LSTM/w_o_diag"),
+                                                "LSTM/biases": vs.get_variable("LSTM/biases"),
+                                                "LSTM/weights": vs.get_variable("LSTM/weights")})
         self.saver.restore(sess,path)
 
         self.sess=sess
@@ -202,15 +212,15 @@ class forwardModel:
 
 
 if __name__=='__main__':
-    COUNT_EPOCHS=40
-    COUNT_TIMESTEPS=50
-    NUM_TRAINING=1000
+    COUNT_EPOCHS=120
+    COUNT_TIMESTEPS=100
+    NUM_TRAINING=100
 
     rocketBall= RocketBall.standardVersion()
     rocketBall.enable_borders=False
 
     inputs=[SequenceGenerator.generateCustomInputs_2tuple(COUNT_TIMESTEPS,0.25) for i in range(NUM_TRAINING)]
-    outputs=[SequenceGenerator.runInputs_2tuple_delta(rocketBall,input,1./30.) for input in inputs]
+    outputs=[SequenceGenerator.runInputs_relative_2tuple(rocketBall,input,1./30.) for input in inputs]
 
 
     configuration={
@@ -220,7 +230,7 @@ if __name__=='__main__':
         "size_input":2,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"test"
+        "tag":"relative_test"
     }
 
 
@@ -229,4 +239,3 @@ if __name__=='__main__':
     #fmodel.restore(path)
     #print(fmodel.sess.run(tf.global_variables()))
     fmodel.train(inputs, outputs,count_epochs=COUNT_EPOCHS,logging=True,save=True)
-

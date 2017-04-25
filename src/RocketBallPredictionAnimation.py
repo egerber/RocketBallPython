@@ -1,8 +1,8 @@
 from src.RocketBallGUI import *
 from src.RocketBall import RocketBall
 from src.SequenceGenerator import SequenceGenerator
-from src.models.forwardPredictor import *
-from src.models.singleStepPredictor import *
+from src.models.singleStepForwardModel import *
+
 
 class RocketBallPredictionAnimation(RocketBallGUI):
 
@@ -72,13 +72,12 @@ if __name__ == "__main__":
         "size_input":2,
         "use_biases":True,
         "use_peepholes":True,
-
+        "tag": "noborders_relative"
     }
 
 
-    checkpointDirectory=os.path.dirname(__file__)+"/../data/checkpoints/"
-    restorePath=checkpointDirectory+createConfigurationString(configuration)+".chkpt"
-    predictor=singleStepPredictor(configuration,restorePath)
+    path=os.path.dirname(__file__)+"/../data/checkpoints/"+createConfigurationString(configuration)+".chkpt"
+    predictor=singleStepForwardModel.createFromOld(configuration,path)
 
     anim=None
     inputs=SequenceGenerator.generateCustomInputs_2tuple(TIMESTEPS,0.25)
@@ -94,7 +93,7 @@ if __name__ == "__main__":
         anim=animation.FuncAnimation(fig,gui.animate,
                                      init_func=gui.initGraphics,
                                      frames=TIMESTEPS-1,
-                                     interval=100.)
+                                     interval=200.)
         anim._start()
 
     fig=plt.figure()
@@ -104,6 +103,8 @@ if __name__ == "__main__":
     fig.canvas.mpl_connect('key_release_event',gui.keyrelease)
     fig.canvas.mpl_connect('button_press_event',lambda event: resetAnimation(gui))
 
-    resetAnimation(gui)
+    #resetAnimation(gui)
     #anim=resetAnimation(gui)
-    plt.show()
+    #plt.show()
+    for i in range(100):
+        print(predictor([0.,0.]))

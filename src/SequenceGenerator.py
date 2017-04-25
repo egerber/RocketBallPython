@@ -171,6 +171,37 @@ class SequenceGenerator:
             prevPosition.y=nextPosition.y
 
         return outputs
+
+    @staticmethod
+    def runInputs_2tuple_delta(rocketBall,inputs,dt):
+        rocketBall.reset()
+
+        outputs=np.empty((len(inputs),2))
+
+        if(len(inputs[0])==4):
+            rocketBall.setPosition(Vector2f(inputs[0][2],inputs[0][3]))
+        else:
+            rocketBall.placeDefault()
+
+
+
+        startPosition=Vector2f(0.,0.)
+        startPosition.x=rocketBall.position.x
+        startPosition.y=rocketBall.position.y
+
+        for index,input in enumerate(inputs):
+            rocketBall.setThrust1(input[0])
+            rocketBall.setThrust2(input[1])
+
+            rocketBall.update(dt)
+            nextPosition=rocketBall.getPosition()
+            outputs[index][0]=nextPosition.x-startPosition.x
+            outputs[index][1]=nextPosition.y-startPosition.y
+
+
+
+        return outputs
+
     @staticmethod
     def runInputs_6tuple(rocketBall,inputs,dt):
         rocketBall.reset()
@@ -198,6 +229,49 @@ class SequenceGenerator:
 
         return outputs
 
+    def runInputs_6tuple_relative(rocketBall,inputs,dt):
+        rocketBall.reset()
+        if(len(inputs[0])>=4):
+            rocketBall.setPosition(Vector2f(inputs[0][2],inputs[0][3]))
+        else:
+            rocketBall.placeDefault()
+
+        prevPosition=Vector2f(0.,0.)
+        prevAcceleration=Vector2f(0.,0.)
+        prevVelocity=Vector2f(0.,0.)
+
+        prevPosition.x=rocketBall.position.x
+        prevPosition.y=rocketBall.position.y
+        prevAcceleration.x=rocketBall.acceleration.x
+        prevAcceleration.y=rocketBall.acceleration.y
+        prevVelocity.x=rocketBall.velocity.x
+        prevVelocity.y=rocketBall.velocity.y
+
+        outputs=np.empty((len(inputs),6))
+        for index,input in enumerate(inputs):
+            rocketBall.setThrust1(input[0])
+            rocketBall.setThrust2(input[1])
+
+            rocketBall.update(dt)
+            nextPosition=rocketBall.getPosition()
+            nextVelocity=rocketBall.velocity
+            nextAcceleration=rocketBall.acceleration
+
+            outputs[index][0]=nextPosition.x-prevPosition.x
+            outputs[index][1]=nextPosition.y-prevPosition.y
+            outputs[index][2]=nextVelocity.x-prevVelocity.x
+            outputs[index][3]=nextVelocity.y-prevVelocity.y
+            outputs[index][4]=nextAcceleration.x-prevAcceleration.x
+            outputs[index][5]=nextAcceleration.y-prevAcceleration.y
+
+            prevPosition.x=rocketBall.position.x
+            prevPosition.y=rocketBall.position.y
+            prevAcceleration.x=rocketBall.acceleration.x
+            prevAcceleration.y=rocketBall.acceleration.y
+            prevVelocity.x=rocketBall.velocity.x
+            prevVelocity.y=rocketBall.velocity.y
+
+        return outputs
     @staticmethod
     def test4tuple(rocketBall,inputs,outputs,dt):
         rocketBall.reset()
@@ -235,6 +309,6 @@ if __name__=="__main__":
 
     #rocketBall=rocketBall.standardVersion()
     outputs=SequenceGenerator.runInputs_2tuple(rocketBall,inputs=inputs,dt=1./30.)
-    outputs_relative=SequenceGenerator.runInputs_relative_2tuple(rocketBall,inputs=inputs,dt=1./30.)
+    outputs_delta=SequenceGenerator.runInputs_2tuple_delta(rocketBall,inputs=inputs,dt=1./30.)
 
-    print(outputs_relative)
+    print(outputs_delta)

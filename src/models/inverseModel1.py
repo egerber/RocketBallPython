@@ -77,6 +77,7 @@ class inverseModel:
                                                epsilon=self.epsilon,name="MSE_OPTIMIZER")
 
                 self.gradients=self.optimizer.compute_gradients(self.mse,var_list=[self.inputs])
+                self.gradients= [(tf.clip_by_value(grad,0.,1.),var) for grad, var in self.gradients]
                 self.minimizer=self.optimizer.apply_gradients(self.gradients)
 
 
@@ -108,10 +109,8 @@ class inverseModel:
     def __call__(self,target_outputs,count_iterations):
 
         for i in range(count_iterations):
-            i,o,_,r,g=self.sess.run([self.inputs,self.outputs,self.minimizer,self.rmse,self.gradients],feed_dict={self.target:[target_outputs]})
+            o,_,r,g=self.sess.run([self.outputs,self.minimizer,self.rmse,self.gradients],feed_dict={self.target:[target_outputs]})
             print("Gradients",g)
-            print("...")
-            print(i)
         return i
 
 
@@ -127,14 +126,24 @@ if __name__=='__main__':
     configuration={
         "cell_type":"LSTMCell",
         "num_hidden_units": 16,
-        "size_output":2,
+        "size_output":6,
         "size_input":2,
         "use_biases":True,
         "use_peepholes":True,
         "tag":"relative_noborders2"
     }
 
-    outputs=[[0]*configuration["size_input"] for i in range(COUNT_TIMESTEPS)]
+    configuration={
+        "cell_type":"LSTMCell",
+        "num_hidden_units": 16,
+        "size_output":6,
+        "size_input":2,
+        "use_biases":True,
+        "use_peepholes":True,
+        "tag":"relative"
+    }
+
+    outputs=[[0]*configuration["size_output"] for i in range(COUNT_TIMESTEPS)]
     path=checkpointDirectory=os.path.dirname(__file__)+"/../../data/checkpoints/"+createConfigurationString(configuration)+".chkpt"
 
     iModel=inverseModel(configuration)
