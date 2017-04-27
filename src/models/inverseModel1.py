@@ -118,7 +118,7 @@ class inverseModel:
             print("errors",r)
             print("outputs:",o)
             print("inputs:",i)
-        return i
+        return i[0]
 
 
 if __name__=='__main__':

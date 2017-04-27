@@ -59,7 +59,7 @@ if __name__ == "__main__":
     rocketBall=RocketBall.standardVersion()
     rocketBall.enable_borders=False
     rocketBall.use_sigmoid=False
-    COUNT_TIMESTEPS=10
+    COUNT_TIMESTEPS=100
 
 
     configuration={
@@ -86,7 +86,7 @@ if __name__ == "__main__":
 
         rocketBall.reset()
         inputs=SequenceGenerator.generateCustomInputs_2tuple(COUNT_TIMESTEPS,0.7,gaussian=True,mean=0.35,std=0.7)
-        inputs=iModel.infer([[-0.05]*configuration["size_output"] for i in range(COUNT_TIMESTEPS)],100)
+        inputs=iModel.infer([[-0.0]*configuration["size_output"] for i in range(COUNT_TIMESTEPS)],100)
 
 
         gui.predictor.reset()
