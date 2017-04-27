@@ -1,4 +1,4 @@
-from models.forwardModel import *
+from src.models.forwardModel import *
 
 
 class singleStepForwardModel(forwardModel):
@@ -70,12 +70,18 @@ if __name__=="__main__":
     configuration={
         "cell_type":"LSTMCell",
         "num_hidden_units": 16,
-        "size_output":6,
+        "size_output":2,
         "size_input":2,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"relative"
+        "tag":"relative_noborders"
     }
 
     path=os.path.dirname(__file__)+"/../../data/checkpoints/"+createConfigurationString(configuration)+".chkpt"
-    tmodel=singleStepForwardModel.createFromOld(configuration,path)
+    #tmodel=singleStepForwardModel.createFromOld(configuration,path)
+    #print(tmodel([0.2,0.3]))
+    #print(tmodel([0.1,0.2]))
+
+    fmodel=forwardModel.createFromOld(configuration,2,path)
+    print(fmodel([[0.2,0.3],[0.1,0.2]]))
+

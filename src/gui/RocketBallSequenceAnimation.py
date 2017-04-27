@@ -1,6 +1,7 @@
-from src.RocketBallGUI import *
 from src.RocketBall import RocketBall
 from src.SequenceGenerator import SequenceGenerator
+from src.gui.RocketBallGUI import *
+from src.models import inverseModel1
 
 class RocketBallSequenceAnimation(RocketBallGUI):
 
@@ -26,19 +27,19 @@ class RocketBallSequenceAnimation(RocketBallGUI):
 if __name__ == "__main__":
     rocketBall=RocketBall.standardVersion()
     rocketBall.enable_borders=False
-    rocketBall.use_sigmoid=True
+    rocketBall.use_sigmoid=False
 
     TIMESTEPS=100
 
 
     inputs=None
     anim=None
-
     def resetAnimation(gui):
         global anim
         rocketBall.reset()
         inputs=SequenceGenerator.generateCustomInputs_2tuple(TIMESTEPS,0.7,gaussian=True,mean=0.35,std=0.7)
-        print(inputs)
+
+
         gui.inputs=inputs
         if(not anim is None):
             anim._stop()

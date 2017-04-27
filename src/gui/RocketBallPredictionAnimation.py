@@ -1,8 +1,6 @@
-from src.RocketBallGUI import *
-from src.RocketBall import RocketBall
-from src.SequenceGenerator import SequenceGenerator
+from src.gui.RocketBallGUI import *
 from src.models.singleStepForwardModel import *
-
+from src.models.inverseModel1 import *
 
 class RocketBallPredictionAnimation(RocketBallGUI):
 
@@ -38,19 +36,20 @@ class RocketBallPredictionAnimation(RocketBallGUI):
 
 
     def animate(self,i):
-        self.rocketBall.setThrust1(self.inputs[i,0])
-        self.rocketBall.setThrust2(self.inputs[i,1])
+        self.rocketBall.setThrust1(self.inputs[i][0])
+        self.rocketBall.setThrust2(self.inputs[i][1])
 
         #make prediction before new position is calculated
         prediction=predictor(self.inputs[i])[0]
         print(prediction)
+
         if(self.relative):
             prediction[0]+=rocketBall.position.x
             prediction[1]+=rocketBall.position.y
 
         self.predicted_position=prediction
         RocketBallGUI.animate(self,i)
-
+        print("position",rocketBall.position)
 
 
 
@@ -59,8 +58,8 @@ class RocketBallPredictionAnimation(RocketBallGUI):
 if __name__ == "__main__":
     rocketBall=RocketBall.standardVersion()
     rocketBall.enable_borders=False
-    rocketBall.use_sigmoid=True
-    COUNT_TIMESTEPS=100
+    rocketBall.use_sigmoid=False
+    COUNT_TIMESTEPS=10
 
 
     configuration={
@@ -70,19 +69,26 @@ if __name__ == "__main__":
         "size_input":2,
         "use_biases":True,
         "use_peepholes":True,
-        "tag": "relative_noborders_sigmoid"
+        "tag": "relative_noborders"
     }
 
 
-    path=os.path.dirname(__file__)+"/../data/checkpoints/"+createConfigurationString(configuration)+".chkpt"
+    path=os.path.dirname(__file__)+"/../../data/checkpoints/"+createConfigurationString(configuration)+".chkpt"
     predictor=singleStepForwardModel.createFromOld(configuration,path)
 
     anim=None
     inputs=None
+    iModel=inverseModel(configuration)
+    iModel.create(COUNT_TIMESTEPS,'/cpu:0')
+    iModel.restore(path)
     def resetAnimation(gui):
-        global anim
+        global anim,iModel,path
+
         rocketBall.reset()
         inputs=SequenceGenerator.generateCustomInputs_2tuple(COUNT_TIMESTEPS,0.7,gaussian=True,mean=0.35,std=0.7)
+        inputs=iModel.infer([[-0.05]*configuration["size_output"] for i in range(COUNT_TIMESTEPS)],100)
+
+
         gui.predictor.reset()
 
         gui.inputs=inputs

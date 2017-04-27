@@ -11,14 +11,16 @@ from src.models.forwardModel import forwardModel
 class inverseModel:
 
     def __init__(self,configuration):
+        forwardModel.__init__(self,configuration)
         self.epsilon=10**(-8)
-        self.learning_rate=0.05
+        self.learning_rate=0.01
         self.beta1=0.9
         self.beta2=0.9
 
         self.configuration=configuration
         self.inputs=None #Variable
         self.outputs=None #Placeholder
+
 
     def create(self,count_timesteps,device='/cpu:0'):
         t_begin=time.time()
@@ -29,7 +31,7 @@ class inverseModel:
         lstm_outputs=[]
         cell=None
 
-        with vs.variable_scope("network"):
+        with vs.variable_scope("inverse/network"):
             if(self.configuration["cell_type"]=="LSTMCell"):
                 cell=tf.contrib.rnn.LSTMCell(num_units=self.configuration["num_hidden_units"],use_peepholes=self.configuration["use_peepholes"],state_is_tuple=True)
             elif(self.configuration["cell_type"]=="GRUCell"):
@@ -78,7 +80,7 @@ class inverseModel:
 
                 self.minimizer=self.optimizer.minimize(self.mse,var_list=[self.inputs])
 
-                #self.clippingOperation=self.inputs.assign(tf.clip_by_value(self.inputs, 0.1,0.9))
+                self.clipping=self.inputs.assign(tf.clip_by_value(self.inputs, 0.0,1.0))
 
 
         t_end=time.time()
@@ -93,35 +95,39 @@ class inverseModel:
         sess=tf.Session()
         sess.run(tf.global_variables_initializer())
         #2nd: set weights from pretrained model
-        with vs.variable_scope("network",reuse=True) as scope:
-            #with vs.variable_scope("OUTPUT",reuse=True) as scope:
-            self.saver=tf.train.Saver(var_list={"OUTPUT/weights_output":vs.get_variable("OUTPUT/weights_output"),
-                                            "LSTM/w_f_diag": vs.get_variable("LSTM/w_f_diag"),
-                                            "LSTM/w_i_diag": vs.get_variable("LSTM/w_i_diag"),
-                                            "LSTM/w_o_diag": vs.get_variable("LSTM/w_o_diag"),
-                                            "LSTM/biases": vs.get_variable("LSTM/biases"),
-                                            "LSTM/weights": vs.get_variable("LSTM/weights")})
+        #sess=tf.Session()
+        with vs.variable_scope("inverse"):
+            with vs.variable_scope("network",reuse=True) as scope:
+                #with vs.variable_scope("OUTPUT",reuse=True) as scope:
+                self.saver=tf.train.Saver(var_list={"LSTM/w_f_diag": vs.get_variable("LSTM/w_f_diag"),
+                                                    "LSTM/w_i_diag": vs.get_variable("LSTM/w_i_diag"),
+                                                    "LSTM/w_o_diag": vs.get_variable("LSTM/w_o_diag"),
+                                                    "LSTM/biases": vs.get_variable("LSTM/biases"),
+                                                    "LSTM/weights": vs.get_variable("LSTM/weights"),
+                                                    "OUTPUT/weights_output":vs.get_variable("OUTPUT/weights_output"),
+                                                    "OUTPUT/biases_output":vs.get_variable("OUTPUT/biases_output")})
         self.saver.restore(sess,path)
 
         self.sess=sess
         print("Restoring Done! (time: " + str(time.time()-t_begin)+ ")")
 
-    def __call__(self,target_outputs,count_iterations):
+    def infer(self,target_outputs,count_iterations):
 
         for i in range(count_iterations):
-            i,o,r,_=self.sess.run([self.inputs,self.outputs,self.rmse,self.minimizer],feed_dict={self.target:[target_outputs]})
-            print(r)
+            i,o,r,_,_=self.sess.run([self.inputs,self.outputs,self.rmse,self.minimizer,self.clipping],feed_dict={self.target:[target_outputs]})
+            print("errors",r)
             print("outputs:",o)
+            print("inputs:",i)
         return i
 
 
 if __name__=='__main__':
-    COUNT_ITERATIONS=5000
+    COUNT_ITERATIONS=120
     COUNT_TIMESTEPS=10
 
     rocketBall= RocketBall.standardVersion()
     rocketBall.enable_borders=False
-    rocketBall.use_sigmoid=True
+    rocketBall.use_sigmoid=False
 
     configuration={
         "cell_type":"LSTMCell",
@@ -130,15 +136,20 @@ if __name__=='__main__':
         "size_input":2,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"relative_noborders_sigmoid"
+        "tag":"relative_noborders"
     }
 
 
-    outputs=[[0.]*configuration["size_output"] for i in range(COUNT_TIMESTEPS)]
+    outputs=[[-0.05]*configuration["size_output"] for i in range(COUNT_TIMESTEPS)]
     path=checkpointDirectory=os.path.dirname(__file__)+"/../../data/checkpoints/"+createConfigurationString(configuration)+".chkpt"
 
     iModel=inverseModel(configuration)
     iModel.create(COUNT_TIMESTEPS,'/cpu:0')
     iModel.restore(path)
-    print(iModel(outputs,count_iterations=COUNT_ITERATIONS))
 
+    print(iModel.infer(outputs,COUNT_ITERATIONS))
+
+    #fModel=forwardModel.createFromOld(configuration,COUNT_TIMESTEPS,path)
+    #print(fModel([[0.1,0.9]]))
+
+    #print(iModel.infer(outputs,count_iterations=COUNT_ITERATIONS))

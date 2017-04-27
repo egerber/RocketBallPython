@@ -175,14 +175,16 @@ class forwardModel:
         sess=tf.Session()
         sess.run(tf.global_variables_initializer())
         #2nd: set weights from pretrained model
+        #sess=tf.Session()
         with vs.variable_scope("network",reuse=True) as scope:
             #with vs.variable_scope("OUTPUT",reuse=True) as scope:
-            self.saver=tf.train.Saver(var_list={"OUTPUT/weights_output":vs.get_variable("OUTPUT/weights_output"),
-                                                "LSTM/w_f_diag": vs.get_variable("LSTM/w_f_diag"),
+            self.saver=tf.train.Saver(var_list={"LSTM/w_f_diag": vs.get_variable("LSTM/w_f_diag"),
                                                 "LSTM/w_i_diag": vs.get_variable("LSTM/w_i_diag"),
                                                 "LSTM/w_o_diag": vs.get_variable("LSTM/w_o_diag"),
                                                 "LSTM/biases": vs.get_variable("LSTM/biases"),
-                                                "LSTM/weights": vs.get_variable("LSTM/weights")})
+                                                "LSTM/weights": vs.get_variable("LSTM/weights"),
+                                                "OUTPUT/weights_output":vs.get_variable("OUTPUT/weights_output"),
+                                                "OUTPUT/biases_output":vs.get_variable("OUTPUT/biases_output")})
         self.saver.restore(sess,path)
 
         self.sess=sess
@@ -191,12 +193,13 @@ class forwardModel:
     def save(self,path):
         if(self.saver is None):
             with vs.variable_scope("network",reuse=True):
-                self.saver=tf.train.Saver(var_list={"OUTPUT/weights_output":vs.get_variable("OUTPUT/weights_output"),
-                                                               "LSTM/w_f_diag": vs.get_variable("LSTM/w_f_diag"),
-                                                               "LSTM/w_i_diag": vs.get_variable("LSTM/w_i_diag"),
-                                                               "LSTM/w_o_diag": vs.get_variable("LSTM/w_o_diag"),
-                                                               "LSTM/biases": vs.get_variable("LSTM/biases"),
-                                                               "LSTM/weights": vs.get_variable("LSTM/weights")})
+                self.saver=tf.train.Saver(var_list={"LSTM/w_f_diag": vs.get_variable("LSTM/w_f_diag"),
+                                                    "LSTM/w_i_diag": vs.get_variable("LSTM/w_i_diag"),
+                                                    "LSTM/w_o_diag": vs.get_variable("LSTM/w_o_diag"),
+                                                    "LSTM/biases": vs.get_variable("LSTM/biases"),
+                                                    "LSTM/weights": vs.get_variable("LSTM/weights"),
+                                                    "OUTPUT/weights_output":vs.get_variable("OUTPUT/weights_output"),
+                                                    "OUTPUT/biases_output":vs.get_variable("OUTPUT/biases_output")})
 
 
         self.saver.save(self.sess, path)
@@ -218,9 +221,9 @@ if __name__=='__main__':
 
     rocketBall= RocketBall.standardVersion()
     rocketBall.enable_borders=False
-    rocketBall.use_sigmoid=True
+    rocketBall.use_sigmoid=False
 
-    inputs=[SequenceGenerator.generateCustomInputs_2tuple(COUNT_TIMESTEPS,0.7,gaussian=True,mean=0.35,std=0.7) for i in range(NUM_TRAINING)]
+    inputs=[SequenceGenerator.generateCustomInputs_2tuple(COUNT_TIMESTEPS,0.3,gaussian=False,mean=0.35,std=0.7) for i in range(NUM_TRAINING)]
     outputs=[SequenceGenerator.runInputs_2tuple_relative(rocketBall,input,1./30.) for input in inputs]
 
 
@@ -231,7 +234,7 @@ if __name__=='__main__':
         "size_input":2,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"relative_noborders_sigmoid"
+        "tag":"relative_noborders"
     }
 
 
@@ -239,4 +242,5 @@ if __name__=='__main__':
     path=os.path.dirname(__file__)+"/../../data/checkpoints/"+createConfigurationString(configuration)+".chkpt"
     #fmodel.restore(path)
     #print(fmodel.sess.run(tf.global_variables()))
+
     fmodel.train(inputs, outputs,count_epochs=COUNT_EPOCHS,logging=True,save=True)
