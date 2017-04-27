@@ -59,17 +59,18 @@ class RocketBallPredictionAnimation(RocketBallGUI):
 if __name__ == "__main__":
     rocketBall=RocketBall.standardVersion()
     rocketBall.enable_borders=False
-    TIMESTEPS=100
+    rocketBall.use_sigmoid=True
+    COUNT_TIMESTEPS=100
 
 
     configuration={
         "cell_type":"LSTMCell",
         "num_hidden_units": 16,
         "size_output":2,
-        "size_input":4,
+        "size_input":2,
         "use_biases":True,
         "use_peepholes":True,
-        "tag": "relative_noborders"
+        "tag": "relative_noborders_sigmoid"
     }
 
 
@@ -77,11 +78,11 @@ if __name__ == "__main__":
     predictor=singleStepForwardModel.createFromOld(configuration,path)
 
     anim=None
-    inputs=SequenceGenerator.generateCustomInputs_4tuple_relative(rocketBall,TIMESTEPS,0.25)
+    inputs=None
     def resetAnimation(gui):
         global anim
         rocketBall.reset()
-        inputs=SequenceGenerator.generateCustomInputs_4tuple_relative(rocketBall,TIMESTEPS,0.25)
+        inputs=SequenceGenerator.generateCustomInputs_2tuple(COUNT_TIMESTEPS,0.7,gaussian=True,mean=0.35,std=0.7)
         gui.predictor.reset()
 
         gui.inputs=inputs
@@ -89,7 +90,7 @@ if __name__ == "__main__":
             anim._stop()
         anim=animation.FuncAnimation(fig,gui.animate,
                                      init_func=gui.initGraphics,
-                                     frames=TIMESTEPS-1,
+                                     frames=COUNT_TIMESTEPS-1,
                                      interval=200.)
         anim._start()
 

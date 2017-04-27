@@ -218,8 +218,9 @@ if __name__=='__main__':
 
     rocketBall= RocketBall.standardVersion()
     rocketBall.enable_borders=False
+    rocketBall.use_sigmoid=True
 
-    inputs=[SequenceGenerator.generateCustomInputs_2tuple_negative(COUNT_TIMESTEPS,0.25) for i in range(NUM_TRAINING)]
+    inputs=[SequenceGenerator.generateCustomInputs_2tuple(COUNT_TIMESTEPS,0.7,gaussian=True,mean=0.35,std=0.7) for i in range(NUM_TRAINING)]
     outputs=[SequenceGenerator.runInputs_2tuple_relative(rocketBall,input,1./30.) for input in inputs]
 
 
@@ -230,7 +231,7 @@ if __name__=='__main__':
         "size_input":2,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"relative_noborders_allownegative"
+        "tag":"relative_noborders_sigmoid"
     }
 
 

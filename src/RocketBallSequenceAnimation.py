@@ -26,19 +26,19 @@ class RocketBallSequenceAnimation(RocketBallGUI):
 if __name__ == "__main__":
     rocketBall=RocketBall.standardVersion()
     rocketBall.enable_borders=False
-    rocketBall.use_sigmoid
+    rocketBall.use_sigmoid=True
 
     TIMESTEPS=100
 
 
-    inputs=SequenceGenerator.generateCustomInputs_2tuple(TIMESTEPS,0.1,gaussian=True,mean=0.65,std=0.4)
+    inputs=None
     anim=None
 
     def resetAnimation(gui):
         global anim
         rocketBall.reset()
-        inputs=SequenceGenerator.generateCustomInputs_2tuple(TIMESTEPS,0.7,gaussian=True,mean=0.57555,std=0.1)
-
+        inputs=SequenceGenerator.generateCustomInputs_2tuple(TIMESTEPS,0.7,gaussian=True,mean=0.35,std=0.7)
+        print(inputs)
         gui.inputs=inputs
         if(not anim is None):
             anim._stop()

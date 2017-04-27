@@ -12,7 +12,7 @@ class inverseModel:
 
     def __init__(self,configuration):
         self.epsilon=10**(-8)
-        self.learning_rate=0.01
+        self.learning_rate=0.05
         self.beta1=0.9
         self.beta2=0.9
 
@@ -78,7 +78,7 @@ class inverseModel:
 
                 self.minimizer=self.optimizer.minimize(self.mse,var_list=[self.inputs])
 
-                self.clippingOperation=self.inputs.assign(tf.clip_by_value(self.inputs, 0.1,0.9))
+                #self.clippingOperation=self.inputs.assign(tf.clip_by_value(self.inputs, 0.1,0.9))
 
 
         t_end=time.time()
@@ -110,18 +110,18 @@ class inverseModel:
 
         for i in range(count_iterations):
             i,o,r,_=self.sess.run([self.inputs,self.outputs,self.rmse,self.minimizer],feed_dict={self.target:[target_outputs]})
-            print(i)
+            print(r)
             print("outputs:",o)
         return i
 
 
 if __name__=='__main__':
-    COUNT_ITERATIONS=100
+    COUNT_ITERATIONS=5000
     COUNT_TIMESTEPS=10
 
     rocketBall= RocketBall.standardVersion()
     rocketBall.enable_borders=False
-
+    rocketBall.use_sigmoid=True
 
     configuration={
         "cell_type":"LSTMCell",
@@ -130,11 +130,11 @@ if __name__=='__main__':
         "size_input":2,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"relative_noborders_negative"
+        "tag":"relative_noborders_sigmoid"
     }
 
 
-    outputs=[[0]*configuration["size_output"] for i in range(COUNT_TIMESTEPS)]
+    outputs=[[0.]*configuration["size_output"] for i in range(COUNT_TIMESTEPS)]
     path=checkpointDirectory=os.path.dirname(__file__)+"/../../data/checkpoints/"+createConfigurationString(configuration)+".chkpt"
 
     iModel=inverseModel(configuration)
