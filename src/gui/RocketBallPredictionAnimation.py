@@ -49,7 +49,7 @@ class RocketBallPredictionAnimation(RocketBallGUI):
 
         self.predicted_position=prediction
         RocketBallGUI.animate(self,i)
-        print("position",rocketBall.position)
+
 
 
 
@@ -86,7 +86,7 @@ if __name__ == "__main__":
 
         rocketBall.reset()
         inputs=SequenceGenerator.generateCustomInputs_2tuple(COUNT_TIMESTEPS,0.7,gaussian=True,mean=0.35,std=0.7)
-        inputs=iModel.infer([[-0.0]*configuration["size_output"] for i in range(COUNT_TIMESTEPS)],100)
+        inputs=iModel.infer([[0.000,0.0] for i in range(COUNT_TIMESTEPS)],30)
 
 
         gui.predictor.reset()
@@ -97,7 +97,7 @@ if __name__ == "__main__":
         anim=animation.FuncAnimation(fig,gui.animate,
                                      init_func=gui.initGraphics,
                                      frames=COUNT_TIMESTEPS-1,
-                                     interval=200.)
+                                     interval=40.)
         anim._start()
 
     fig=plt.figure()
@@ -108,5 +108,5 @@ if __name__ == "__main__":
     fig.canvas.mpl_connect('button_press_event',lambda event: resetAnimation(gui))
 
     resetAnimation(gui)
-    anim=resetAnimation(gui)
+    #anim=resetAnimation(gui)
     plt.show()

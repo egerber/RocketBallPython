@@ -30,15 +30,27 @@ class SequenceGenerator:
 
         return inputs
 
-
+    @staticmethod
+    def generateSequenceInputs(rocketBall,timesteps,changingProbability,dt=1./30.):
+        motorInputs=SequenceGenerator.generateCustomInputs_2tuple(timesteps,changingProbability)
+        relative_outputs=SequenceGenerator.runInputs_2tuple_relative(rocketBall,motorInputs,dt)
+        return relative_outputs
 
     @staticmethod
-    def runInput(self):
-        pass
+    def generateSequenceOutputs(sequenceInputs):
+        outputs=np.empty(np.shape(sequenceInputs))
+
+        outputs[0][0]=sequenceInputs[0][0]
+        outputs[0][1]=sequenceInputs[0][1]
+        for i in range(1,len(sequenceInputs)):
+            outputs[i][0]=sequenceInputs[i][0]+outputs[i-1][0]
+            outputs[i][1]=sequenceInputs[i][1]+outputs[i-1][1]
+
+        return outputs
+
     @staticmethod
     def generateCustomInputs_4tuple(rocketBall, timesteps, changingProbability, dt=1. / 30.,gaussian=False):
         rocketBall.reset()
-
 
         #choose random initial Position on the field (considers radius of rocketBall)
         initialPosition=Vector2f(np.random.uniform(low=rocketBall.getLeftBorder()+rocketBall.getRadius(),
@@ -405,9 +417,7 @@ class SequenceGenerator:
 if __name__=="__main__":
     rocketBall=RocketBall.standardVersion()
     rocketBall.enable_borders=False
-    inputs=SequenceGenerator.generateCustomInputs_2tuple_negative(timesteps=10, changingProbability=0.3)
 
-    outputs=SequenceGenerator.runInputs_2tuple_relative(rocketBall,inputs=inputs,dt=1./30.)
-
-    print(inputs)
-    print(outputs)
+    inputSequence=SequenceGenerator.generateSequenceInputs(rocketBall,10,0.3)
+    print(inputSequence)
+    print(SequenceGenerator.generateSequenceOutputs(inputSequence))
