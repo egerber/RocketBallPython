@@ -1,6 +1,6 @@
 from src.gui.RocketBallGUI import *
 from src.models.inverseModel1 import *
-
+from numpy.linalg import norm
 class RocketBallInferenceAnimation(RocketBallGUI):
 
     def __init__(self,rocketBall,targetPosition,inferencer,count_iterations,count_timesteps,dt=1./30.):
@@ -18,7 +18,9 @@ class RocketBallInferenceAnimation(RocketBallGUI):
     def animate(self,i):
 
         discrepancy=np.array([self.targetPosition.x-self.rocketBall.position.x,self.targetPosition.y-self.rocketBall.position.y])
-        np.clip(discrepancy,a_min=-0.05,a_max=0.05,out=discrepancy)
+        distance=min(0.05,math.sqrt(discrepancy[0]**2+discrepancy[1]**2))
+        #np.clip(discrepancy,a_min=-0.05,a_max=0.05,out=discrepancy)
+        discrepancy=discrepancy/norm(discrepancy) *distance
         nextInput=self.inferencer.infer([discrepancy for i in range(self.count_timesteps)],self.count_iterations)
         #print("nextInput: ",nextInput)
 
@@ -30,7 +32,7 @@ class RocketBallInferenceAnimation(RocketBallGUI):
 
 
 if __name__ == "__main__":
-    COUNT_ITERATIONS=60
+    COUNT_ITERATIONS=80
     COUNT_TIMESTEPS=3
 
     rocketBall= RocketBall.standardVersion()
