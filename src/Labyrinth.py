@@ -5,7 +5,7 @@ class Labyrinth:
 
     def __init__(self,rows,columns,width,height):
         self.position=Vector2f(0.2,1.)
-        self.obstacle=np.zeros((rows,columns),dtype=np.bool)#holds list of [i,j] refering to row i and column j
+        self.obstacle=np.zeros((rows,columns),dtype=np.bool) #holds list of [i,j] refering to row i and column j
         self.radius=0.06
         self.width=width
         self.height=height
@@ -31,21 +31,27 @@ class Labyrinth:
     def move(self,delta_x,delta_y):
         self.position.x+=delta_x
         self.position.y+=delta_y
-
+        epsilon=0.01
         #check for boundaries
-        self.position.x = max(0+self.radius, min(self.position.x, self.width-self.radius))
-        self.position.y=max(0+self.radius,min(self.position.y,self.height-self.radius))
+        print("before:",str(self.position))
+        self.position.x = max(0+self.radius+epsilon, min(self.position.x, self.width-self.radius-epsilon))
+        self.position.y=  max(0+self.radius+epsilon,min(self.position.y,self.height-self.radius-epsilon))
+        print("after:",str(self.position))
         #check for top-collision
         bottom_i,_=divmod(self.position.y + self.radius, self.height_cell)
         current_j,_=divmod(self.position.x, self.width_cell)
+        print(self.position)
 
-        print("top_i",str(bottom_i),"current_j:",str(current_j))
         if((self.obstacle[int(bottom_i)][int(current_j)])):
             self.position.y=(bottom_i+1)*self.height_cell+self.radius
-
+            print("hier")
+        print(self.position.y-self.radius)
+        print(self.height_cell)
         top_i,_=divmod(self.position.y - self.radius, self.height_cell)
-        if((self.rows or self.obstacle[int(top_i)][int(current_j)])):
+        print("top_i",str(top_i),"current_j:",str(current_j))
+        if((self.obstacle[int(top_i)][int(current_j)])):
             self.position.y=(top_i)*self.height_cell-self.radius
+
 
         current_i,_=divmod(self.position.y, self.height_cell)
         left_i,_=divmod(self.position.x - self.radius, self.width_cell)
@@ -58,12 +64,12 @@ class Labyrinth:
 
         #check colisions
 if __name__=="__main__":
-    lab=Labyrinth(4,4,3,2)
+    lab=Labyrinth(4,4,4,2)
     lab.position=Vector2f(0.07,0.2)
     lab.obstacle[3][:]=True
     lab.obstacle[2][:]=True
     lab.placeRandomPosition()
-    for i in range(100):
-        lab.move(0.1,0.05)
-        print(lab.position)
+    for i in range(60):
+        lab.move(-0.1,0.05)
+
     print(lab.position)
