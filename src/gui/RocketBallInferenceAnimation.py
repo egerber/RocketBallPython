@@ -32,8 +32,8 @@ class RocketBallInferenceAnimation(RocketBallGUI):
 
 
 if __name__ == "__main__":
-    COUNT_ITERATIONS=80
-    COUNT_TIMESTEPS=3
+    COUNT_ITERATIONS=30
+    COUNT_TIMESTEPS=1
 
     rocketBall= RocketBall.standardVersion()
     rocketBall.enable_borders=False

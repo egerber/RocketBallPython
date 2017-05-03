@@ -33,26 +33,20 @@ class Labyrinth:
         self.position.y+=delta_y
         epsilon=0.01
         #check for boundaries
-        print("before:",str(self.position))
         self.position.x = max(0+self.radius+epsilon, min(self.position.x, self.width-self.radius-epsilon))
         self.position.y=  max(0+self.radius+epsilon,min(self.position.y,self.height-self.radius-epsilon))
-        print("after:",str(self.position))
+
         #check for top-collision
-        bottom_i,_=divmod(self.position.y + self.radius, self.height_cell)
+        bottom_i,_=divmod(self.position.y - self.radius, self.height_cell)
         current_j,_=divmod(self.position.x, self.width_cell)
-        print(self.position)
 
         if((self.obstacle[int(bottom_i)][int(current_j)])):
             self.position.y=(bottom_i+1)*self.height_cell+self.radius
-            print("hier")
-        print(self.position.y-self.radius)
-        print(self.height_cell)
-        top_i,_=divmod(self.position.y - self.radius, self.height_cell)
-        print("top_i",str(top_i),"current_j:",str(current_j))
+            print("top_collision")
+        top_i,_=divmod(self.position.y +self.radius, self.height_cell)
         if((self.obstacle[int(top_i)][int(current_j)])):
             self.position.y=(top_i)*self.height_cell-self.radius
-
-
+            print("bottom_collision")
         current_i,_=divmod(self.position.y, self.height_cell)
         left_i,_=divmod(self.position.x - self.radius, self.width_cell)
         if((self.obstacle[int(current_i)][int(left_i)])):
@@ -67,9 +61,9 @@ if __name__=="__main__":
     lab=Labyrinth(4,4,4,2)
     lab.position=Vector2f(0.07,0.2)
     lab.obstacle[3][:]=True
-    lab.obstacle[2][:]=True
+    #lab.obstacle[2][:]=True
     lab.placeRandomPosition()
-    for i in range(60):
+    for i in range(30):
         lab.move(-0.1,0.05)
 
     print(lab.position)
