@@ -4,11 +4,11 @@ from src.SequenceGenerator2 import SequenceGenerator2
 from src.helper.JsonHelper import JsonHelper
 
 if __name__=="__main__":
-    COUNT_ITERATIONS=30
+
     COUNT_TIMESTEPS_INVERSEMODEL=1
     COUNT_TIMESTEPS_INPUT=50
 
-    COUNT_EPOCHS=51
+    COUNT_EPOCHS=31
 
     rocketBall= RocketBall.standardVersion()
     rocketBall.enable_borders=False
@@ -24,12 +24,12 @@ if __name__=="__main__":
     }
     configuration_new={
         "cell_type":"LSTMCell",
-        "num_hidden_units": 16,
+        "num_hidden_units": 128,
         "size_output":2,
         "size_input":2,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"forwardModel2_0.05"
+        "tag":"forwardModel2_50_30_1_0.1"
     }
 
 
@@ -38,11 +38,12 @@ if __name__=="__main__":
     iModel=inverseModel(configuration_restore)
 
     iModel.create(COUNT_TIMESTEPS_INVERSEMODEL)
+    iModel.create_all_timesteps_optimizer()
     iModel.restore(path)
 
     rocketBall=rocketBall.standardVersion()
 
-    trainingDict=JsonHelper.restore("../../data/trainingData/training2_(1000,50,30,0.05).json")
+    trainingDict=JsonHelper.restore("../../data/trainingData/training2_(500,50,30,1,0.1).json")
     inputs=trainingDict["inputs"]
     outputs=trainingDict["outputs"]
 

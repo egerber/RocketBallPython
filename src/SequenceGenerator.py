@@ -248,9 +248,9 @@ class SequenceGenerator:
         prevPosition=Vector2f(0.,0.)
         prevPosition.x=rocketBall.position.x
         prevPosition.y=rocketBall.position.y
-        prevDelta=Vector2f(0.,0.)
-        prevDelta.x=0.
-        prevDelta.y=0.
+        prevSpeed=Vector2f(0.,0.)
+        prevSpeed.x=0.
+        prevSpeed.y=0.
 
         for index,input in enumerate(inputs):
             rocketBall.setThrust1(input[0])
@@ -263,14 +263,14 @@ class SequenceGenerator:
             deltay=nextPosition.y-prevPosition.y
             outputs[index][0]=deltax
             outputs[index][1]=deltay
-            outputs[index][2]=deltax-prevDelta.x
-            outputs[index][3]=deltay-prevDelta.y
+            outputs[index][2]=deltax-prevSpeed.x
+            outputs[index][3]=deltay-prevSpeed.y
 
             #assignin new x and y coordinates (Warning: assigning prevPosition=nextPosition causes mistakes)
             prevPosition.x=nextPosition.x
             prevPosition.y=nextPosition.y
-            prevDelta.x=deltax
-            prevDelta.y=deltay
+            prevSpeed.x=deltax
+            prevSpeed.y=deltay
 
         return outputs
 
@@ -405,7 +405,7 @@ if __name__=="__main__":
     rocketBall=RocketBall.standardVersion()
     rocketBall.enable_borders=False
 
-    inputs=SequenceGenerator.generateCustomInputs_4tuple_relative(rocketBall,10,0.3)
-    outputs=SequenceGenerator.runInputs_2tuple_relative(rocketBall,inputs)
+    inputs=SequenceGenerator.generateCustomInputs_4tuple_relative(rocketBall,100,0.3)
+    outputs=SequenceGenerator.runInputs_4tuple_relative(rocketBall,inputs)
     print(inputs)
     print(outputs)

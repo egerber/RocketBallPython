@@ -30,9 +30,61 @@ class inverseModel:
         self.h_state=None
         self.speed=None
 
+        ##
+        self.count_timesteps=None
+
+    def create_last_timestep_optimizer(self):
+        last_output=self.outputs[-1]
+        with vs.variable_scope("LossCalculation") as loss:
+            self.rmse=tf.sqrt(tf.square(tf.subtract(self.target,last_output)),name="RMSE")
+            self.mse=tf.multiply(0.5,tf.square(tf.subtract(self.target,last_output)),name="MSE")
+
+            self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate,
+                                                    beta1=self.beta1,
+                                                    beta2=self.beta2,
+                                                    epsilon=self.epsilon,name="MSE_OPTIMIZER")
+
+            self.minimizer=self.optimizer.minimize(self.mse,var_list=[self.inputs])
+
+            self.clipping=self.inputs.assign(tf.clip_by_value(self.inputs, 0.,1.))
+
+    def create_all_timesteps_optimizer(self):
+        with vs.variable_scope("LossCalculation") as loss:
+            self.rmse=tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(self.target,self.outputs)),axis=2),name="RMSE")
+            self.mse=tf.multiply(0.5,tf.reduce_sum(tf.square(tf.subtract(self.target,self.outputs)),axis=2),name="MSE")
+
+            self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate,
+                                                    beta1=self.beta1,
+                                                    beta2=self.beta2,
+                                                    epsilon=self.epsilon,name="MSE_OPTIMIZER")
+
+            self.minimizer=self.optimizer.minimize(self.mse,var_list=[self.inputs])
+
+            self.clipping=self.inputs.assign(tf.clip_by_value(self.inputs, 0.0,1.0))
+
+    #TODO works only with outputsize=4 so far, needs to be generalized
+    def create_dontcare_optimizer(self):
+        with vs.variable_scope("LossCalculation") as loss:
+
+            slice_do_care=tf.slice(self.outputs,[0,0,0],[1,self.count_timesteps,2])
+            slice_dont_care=tf.slice(self.target,[0,0,2],[1,self.count_timesteps,2])
+            dont_care_outputs=tf.concat([slice_do_care,slice_dont_care],2)
+            self.rmse=tf.sqrt(tf.square(tf.subtract(self.target,dont_care_outputs)),name="RMSE")
+            self.mse=tf.multiply(0.5,tf.square(tf.subtract(self.target,dont_care_outputs)),name="MSE")
+
+            self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate,
+                                                    beta1=self.beta1,
+                                                    beta2=self.beta2,
+                                                    epsilon=self.epsilon,name="MSE_OPTIMIZER")
+
+            self.minimizer=self.optimizer.minimize(self.mse,var_list=[self.inputs])
+
+            self.clipping=self.inputs.assign(tf.clip_by_value(self.inputs, 0.,1.))
+
+
     def create_singleOutput(self,count_timesteps):
         t_begin=time.time()
-
+        self.count_timesteps=count_timesteps
         self.inputs=tf.Variable(tf.random_uniform([1,count_timesteps,self.configuration["size_input"]],minval=0.,maxval=1.))
         self.target=tf.placeholder(tf.float32,[1,self.configuration["size_output"]])
 
@@ -83,26 +135,12 @@ class inverseModel:
             self.outputs=outputs
 
 
-            with vs.variable_scope("LossCalculation") as loss:
-                self.rmse=tf.sqrt(tf.square(tf.subtract(self.target,self.outputs)),name="RMSE")
-                self.mse=tf.multiply(0.5,tf.square(tf.subtract(self.target,self.outputs)),name="MSE")
-
-                self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate,
-                                                        beta1=self.beta1,
-                                                        beta2=self.beta2,
-                                                        epsilon=self.epsilon,name="MSE_OPTIMIZER")
-
-                self.minimizer=self.optimizer.minimize(self.mse,var_list=[self.inputs])
-
-                self.clipping=self.inputs.assign(tf.clip_by_value(self.inputs, 0.,1.))
-
-
         t_end=time.time()
         print("Network Creation Done! (time: " + str(t_end-t_begin) + ")")
 
     def create_self_feeding(self,count_timesteps):
 
-
+        self.count_timesteps=count_timesteps
         self.inputs=tf.Variable(tf.random_uniform([1,count_timesteps,self.configuration["size_input"]-self.configuration["size_output"]],minval=0.,maxval=1.))
         self.target=tf.placeholder(tf.float32,[1,count_timesteps,self.configuration["size_output"]])
 
@@ -142,23 +180,11 @@ class inverseModel:
 
             self.outputs=tf.transpose(final_outputs,[1,0,2],"Transpose_output")
 
-            with vs.variable_scope("LossCalculation") as loss:
-                self.rmse=tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(self.target,self.outputs)),axis=2),name="RMSE")
-                self.mse=tf.multiply(0.5,tf.reduce_sum(tf.square(tf.subtract(self.target,self.outputs)),axis=2),name="MSE")
-
-                self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate,
-                                                        beta1=self.beta1,
-                                                        beta2=self.beta2,
-                                                        epsilon=self.epsilon,name="MSE_OPTIMIZER")
-
-                self.minimizer=self.optimizer.minimize(self.mse,var_list=[self.inputs])
-
-                self.clipping=self.inputs.assign(tf.clip_by_value(self.inputs, 0.0,1.0))
 
 
     def create(self,count_timesteps):
         t_begin=time.time()
-
+        self.count_timesteps=count_timesteps
         self.inputs=tf.Variable(tf.random_uniform([1,count_timesteps,self.configuration["size_input"]],minval=0.,maxval=1.))
         self.target=tf.placeholder(tf.float32,[1,count_timesteps,self.configuration["size_output"]])
 
@@ -206,20 +232,6 @@ class inverseModel:
                 outputs=tf.transpose(outputs,[1,0,2],"Transpose_output")
 
             self.outputs=outputs
-
-
-            with vs.variable_scope("LossCalculation") as loss:
-                self.rmse=tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(self.target,self.outputs)),axis=2),name="RMSE")
-                self.mse=tf.multiply(0.5,tf.reduce_sum(tf.square(tf.subtract(self.target,self.outputs)),axis=2),name="MSE")
-
-                self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate,
-                                               beta1=self.beta1,
-                                               beta2=self.beta2,
-                                               epsilon=self.epsilon,name="MSE_OPTIMIZER")
-
-                self.minimizer=self.optimizer.minimize(self.mse,var_list=[self.inputs])
-
-                self.clipping=self.inputs.assign(tf.clip_by_value(self.inputs, 0.0,1.0))
 
         t_end=time.time()
         print("Network Creation Done! (time: " + str(t_end-t_begin) + ")")
@@ -294,7 +306,7 @@ if __name__=='__main__':
     configuration={
         "cell_type":"LSTMCell",
         "num_hidden_units": 16,
-        "size_output":2,
+        "size_output":4,
         "size_input":4,
         "use_biases":True,
         "use_peepholes":True,
@@ -303,15 +315,16 @@ if __name__=='__main__':
 
 
     #outputs=[[-0.0]*configuration["size_output"] for i in range(COUNT_TIMESTEPS)]
-    outputs=[0.0,0.0]
+    outputs=[0.0,0.0,0.,0.0]
     path=checkpointDirectory=os.path.dirname(__file__)+"/../../data/checkpoints/"+createConfigurationString(configuration)+".chkpt"
 
     iModel=inverseModel(configuration)
-    iModel.create_self_feeding(COUNT_TIMESTEPS)
+    iModel.create(COUNT_TIMESTEPS)
+    iModel.create_dontcare_optimizer()
     iModel.restore(path)
 
     begin=time.time()
     for i in range(20):
-        print(iModel.infer_self_feeding([outputs for i in range(COUNT_TIMESTEPS)],COUNT_ITERATIONS)[0])
+        print(iModel.infer([outputs for i in range(COUNT_TIMESTEPS)],COUNT_ITERATIONS)[0])
     end=time.time()
     print(end-begin)

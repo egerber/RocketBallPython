@@ -223,18 +223,18 @@ if __name__=='__main__':
     rocketBall.enable_borders=False
     rocketBall.use_sigmoid=False
 
-    inputs=[SequenceGenerator.generateCustomInputs_4tuple_relative(rocketBall,COUNT_TIMESTEPS,changingProbability=0.3) for i in range(NUM_TRAINING)]
-    outputs=[SequenceGenerator.runInputs_2tuple_relative(rocketBall,input,dt=1./30.) for input in inputs]
+    inputs=[SequenceGenerator.generateCustomInputs_2tuple(COUNT_TIMESTEPS,changingProbability=0.3) for i in range(NUM_TRAINING)]
+    outputs=[SequenceGenerator.runInputs_4tuple_relative(rocketBall,input,dt=1./30.) for input in inputs]
 
 
     configuration={
         "cell_type":"LSTMCell",
         "num_hidden_units": 16,
-        "size_output":2,
+        "size_output":4,
         "size_input":2,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"forwardModel2"
+        "tag":"relative_noborders"
     }
 
 
