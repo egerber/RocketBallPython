@@ -29,7 +29,7 @@ if __name__=="__main__":
         "size_input":2,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"forwardModel2"
+        "tag":"forwardModel2_0.05"
     }
 
 
@@ -42,7 +42,7 @@ if __name__=="__main__":
 
     rocketBall=rocketBall.standardVersion()
 
-    trainingDict=JsonHelper.restore("../../data/trainingData/training2_(1000,50,30).json")
+    trainingDict=JsonHelper.restore("../../data/trainingData/training2_(1000,50,30,0.05).json")
     inputs=trainingDict["inputs"]
     outputs=trainingDict["outputs"]
 

@@ -96,24 +96,15 @@ class SequenceGenerator:
     #2=delta_x
     #3=delta_y
     @staticmethod
-    def generateCustomInputs_4tuple_relative(rocketBall, timesteps, changingProbability, dt=1. / 30.,gaussian=False):
+    def generateCustomInputs_4tuple_relative(rocketBall, timesteps, changingProbability, dt=1. / 30.):
         rocketBall.reset()
-
-
-        #choose random initial Position on the field (considers radius of rocketBall)
-        initial_velocity=Vector2f(np.random.uniform(low=-0.05,
-                                                   high=0.05),
-                              np.random.uniform(low=-0.05,
-                                                   high=0.05))
         rocketBall.placeDefault()
 
-        if gaussian:
-            inputs=np.random.normal(loc=0.6,scale=0.2,size=(timesteps,4))
-        else:
-            inputs=np.random.rand(timesteps,4) # indices 0,1 are inputs, indices 2,3 are x and y position
+        inputs=np.random.rand(timesteps,4) # indices 0,1 are inputs, indices 2,3 are x and y position
 
-        for i in range(1,timesteps):
-            inputs[i][2:4]=[0.,0.]
+        #set initial_speed to zero
+        inputs[0][2:4]=[0.,0.]
+
         for i in range(1,timesteps):
             #do not change input for thrust1
             if(np.random.rand()>changingProbability):
@@ -121,10 +112,6 @@ class SequenceGenerator:
             #do not change input for thrust2
             if(np.random.rand()>changingProbability):
                 inputs[i][1]=inputs[i-1][1]
-
-        #set intial Position as First
-        #inputs[0][2]=initial_velocity.x
-        #inputs[0][3]=initial_velocity.y
 
         prevPosition=Vector2f(0.,0.)
         prevPosition.x=rocketBall.position.x
@@ -418,6 +405,7 @@ if __name__=="__main__":
     rocketBall=RocketBall.standardVersion()
     rocketBall.enable_borders=False
 
-    inputSequence=SequenceGenerator.generateSequenceInputs(rocketBall,10,0.3)
-    print(inputSequence)
-    print(SequenceGenerator.generateSequenceOutputs(inputSequence))
+    inputs=SequenceGenerator.generateCustomInputs_4tuple_relative(rocketBall,10,0.3)
+    outputs=SequenceGenerator.runInputs_2tuple_relative(rocketBall,inputs)
+    print(inputs)
+    print(outputs)

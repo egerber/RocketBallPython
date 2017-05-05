@@ -79,7 +79,7 @@ if __name__ == "__main__":
     anim=None
     inputs=None
     iModel=inverseModel(configuration)
-    iModel.create(COUNT_TIMESTEPS,'/cpu:0')
+    iModel.create(COUNT_TIMESTEPS)
     iModel.restore(path)
     def resetAnimation(gui):
         global anim,iModel,path

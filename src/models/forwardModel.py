@@ -216,15 +216,15 @@ class forwardModel:
 
 if __name__=='__main__':
     COUNT_EPOCHS=31
-    COUNT_TIMESTEPS=40
+    COUNT_TIMESTEPS=80
     NUM_TRAINING=2000
 
     rocketBall= RocketBall.standardVersion()
     rocketBall.enable_borders=False
     rocketBall.use_sigmoid=False
 
-    inputs=[SequenceGenerator.generateSequenceInputs(rocketBall,COUNT_TIMESTEPS,changingProbability=0.3) for i in range(NUM_TRAINING)]
-    outputs=[SequenceGenerator.generateSequenceOutputs(input) for input in inputs]
+    inputs=[SequenceGenerator.generateCustomInputs_4tuple_relative(rocketBall,COUNT_TIMESTEPS,changingProbability=0.3) for i in range(NUM_TRAINING)]
+    outputs=[SequenceGenerator.runInputs_2tuple_relative(rocketBall,input,dt=1./30.) for input in inputs]
 
 
     configuration={
@@ -234,11 +234,11 @@ if __name__=='__main__':
         "size_input":2,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"controller"
+        "tag":"forwardModel2"
     }
 
 
     fmodel=forwardModel.createNew(configuration,COUNT_TIMESTEPS)
     path=os.path.dirname(__file__)+"/../../data/checkpoints/"+createConfigurationString(configuration)+".chkpt"
 
-    #fmodel.train(inputs, outputs,count_epochs=COUNT_EPOCHS,logging=True,save=True)
+    fmodel.train(inputs, outputs,count_epochs=COUNT_EPOCHS,logging=True,save=True)

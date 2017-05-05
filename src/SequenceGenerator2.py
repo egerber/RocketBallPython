@@ -45,8 +45,8 @@ class SequenceGenerator2:
         return outputs
 
 if __name__=="__main__":
-    COUNT_ITERATIONS=30
-    COUNT_TIMESTEPS=1
+    COUNT_ITERATIONS=80
+    COUNT_TIMESTEPS=3
     COUNT_TIMESTEPS_INPUT=50
     COUNT_TRAINING=1000
 
@@ -74,12 +74,12 @@ if __name__=="__main__":
     rocketBall=rocketBall.standardVersion()
 
     begin=time.time()
-    inputs=[SequenceGenerator2.generateInputs_probOffset(COUNT_TIMESTEPS_INPUT,0.02,0.3).tolist() for i in range(COUNT_TRAINING)]
+    inputs=[SequenceGenerator2.generateInputs_probOffset(COUNT_TIMESTEPS_INPUT,0.05,0.4).tolist() for i in range(COUNT_TRAINING)]
     outputs=[SequenceGenerator2.generateOutputs(rocketBall,iModel,input,COUNT_ITERATIONS).tolist() for input in inputs]
 
     trainingsDict={"inputs": inputs,"outputs": outputs}
-    print(trainingsDict)
-    JsonHelper.save("../data/trainingData/training2_(1000,50,30).json",trainingsDict)
+
+    JsonHelper.save("../data/trainingData/training2_(1000,50,30,0.05).json",trainingsDict)
 
 
     end=time.time()
