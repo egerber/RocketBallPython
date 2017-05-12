@@ -10,6 +10,7 @@ class RocketBallInferenceAnimation(RocketBallGUI):
         self.inferencer=inferencer
         self.count_iterations=count_iterations
         self.count_timesteps=count_timesteps
+
     def initGraphics(self):
 
         RocketBallGUI.initGraphics(self)
@@ -28,6 +29,9 @@ class RocketBallInferenceAnimation(RocketBallGUI):
         self.rocketBall.setThrust2(nextInput[0][1])
 
         RocketBallGUI.animate(self,i)
+
+        #for self feeding network only
+        self.inferencer.last_speed=[[self.rocketBall.speed.x,self.rocketBall.speed.y]]
 
 
 
@@ -54,6 +58,7 @@ if __name__ == "__main__":
     iModel=inverseModel(configuration)
 
     iModel.create_self_feeding(COUNT_TIMESTEPS)
+    iModel.create_last_timestep_optimizer()
     iModel.restore(path)
     anim=None
     def resetAnimation(gui,event=None):

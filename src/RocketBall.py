@@ -31,6 +31,9 @@ class RocketBall:
         self.acceleration=Vector2f(0.,0.)
 
         self.decay=0.9
+
+        self.speed=0.
+
     def __init__(self,g,mass,radius,maxthrust,leftborder,rightborder,topborder,enable_borders=True):
         self.g=g
         self.gvec=Vector2f(0.,0.)#Check if okay
@@ -59,6 +62,8 @@ class RocketBall:
         self.enable_borders=enable_borders
         self.use_sigmoid=False
 
+        #modified from original program
+        self.speed=0.
     def placeDefault(self):
         self.position=Vector2f((self.rightborder-self.leftborder)/2.,self.topborder/2)
 
@@ -105,6 +110,9 @@ class RocketBall:
         self.position=position
 
     def update(self,dt=1./30.):
+        _x_before=self.position.x
+        _y_before=self.position.y
+
         self.computeGravityForceVec(self.mass,self.g,self.gvec)
 
         if(self.use_sigmoid):
@@ -168,5 +176,9 @@ class RocketBall:
         self.velocity.y=nvely
         self.position.x=nposx
         self.position.y=nposy
+
+        #modified from original program
+        self.speed=Vector2f(self.position.x-_x_before,self.position.y-_y_before)
+
 
 

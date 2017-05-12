@@ -22,6 +22,7 @@ if __name__=="__main__":
         "use_peepholes":True,
         "tag":"relative_noborders"
     }
+
     configuration_new={
         "cell_type":"LSTMCell",
         "num_hidden_units": 128,

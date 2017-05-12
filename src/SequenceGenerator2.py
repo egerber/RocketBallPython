@@ -82,6 +82,5 @@ if __name__=="__main__":
 
     JsonHelper.save("../data/trainingData/training2_(500,50,30,1,0.1).json",trainingsDict)
 
-
     end=time.time()
     print(end-begin)
