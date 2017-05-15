@@ -71,21 +71,19 @@ class LabyrinthGUI:
 
     def keypress(self,event):
         if(event.key=="left"):
-            self.labyrinth.move(-0.1,0)
+            self.labyrinth.move(-0.07,0)
         elif(event.key=="right"):
-            self.labyrinth.move(0.1,0)
+            self.labyrinth.move(0.06,0)
         elif(event.key=="up"):
-            self.labyrinth.move(0.,0.1)
+            self.labyrinth.move(0.,0.12)
         elif(event.key=="down"):
-            self.labyrinth.move(0.,-0.1)
+            self.labyrinth.move(0.,-0.09)
 
 
 
 if __name__ == "__main__":
-    lab=Labyrinth(4,4,3,2)
-    lab.obstacle[0][0]=True
-    lab.obstacle[0][3]=True
-    lab.obstacle[3][0]=True
+    lab=Labyrinth.standardVersion()
+    lab.placeRandomPosition()
     fig=plt.figure()
     gui=LabyrinthGUI(lab)
 
@@ -94,7 +92,7 @@ if __name__ == "__main__":
     anim=animation.FuncAnimation(fig,gui.animate,
                                  init_func=gui.initGraphics,
                                  frames=10000,
-                                 interval=50)
+                                 interval=10)
 
 
     plt.show()

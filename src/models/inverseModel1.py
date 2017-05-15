@@ -295,6 +295,7 @@ class inverseModel:
         self.last_h=np.zeros((1,self.configuration["num_hidden_units"]))
         self.last_speed=np.zeros((1,self.configuration["size_output"]))
         #TODO Maybe self.inputs has to be reinitialized
+        #self.inputs=tf.Variable(tf.random_uniform([1,self.count_timesteps,self.configuration["size_input"]],minval=0.,maxval=1.))
 
 if __name__=='__main__':
     COUNT_ITERATIONS=100

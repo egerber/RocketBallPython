@@ -22,22 +22,22 @@ class RocketBallInferenceAnimation(RocketBallGUI):
         distance=min(0.05,math.sqrt(discrepancy[0]**2+discrepancy[1]**2))
         #np.clip(discrepancy,a_min=-0.05,a_max=0.05,out=discrepancy)
         discrepancy=discrepancy/norm(discrepancy) *distance
-        nextInput=self.inferencer.infer_self_feeding([discrepancy for i in range(self.count_timesteps)],self.count_iterations)
+
+        nextInput=self.inferencer.infer([discrepancy for i in range(self.count_timesteps)],self.count_iterations)
         #print("nextInput: ",nextInput)
 
         self.rocketBall.setThrust1(nextInput[0][0])
         self.rocketBall.setThrust2(nextInput[0][1])
 
         RocketBallGUI.animate(self,i)
-
-        #for self feeding network only
+        #for self feeding network only, prevents the rocketBall from drifting away
         self.inferencer.last_speed=[[self.rocketBall.speed.x,self.rocketBall.speed.y]]
 
 
 
 if __name__ == "__main__":
-    COUNT_ITERATIONS=100
-    COUNT_TIMESTEPS=3
+    COUNT_ITERATIONS=30
+    COUNT_TIMESTEPS=1
 
     rocketBall= RocketBall.standardVersion()
     rocketBall.enable_borders=False
@@ -46,7 +46,7 @@ if __name__ == "__main__":
         "cell_type":"LSTMCell",
         "num_hidden_units": 16,
         "size_output":2,
-        "size_input":4,
+        "size_input":2,
         "use_biases":True,
         "use_peepholes":True,
         "tag":"relative_noborders"
@@ -57,8 +57,8 @@ if __name__ == "__main__":
 
     iModel=inverseModel(configuration)
 
-    iModel.create_self_feeding(COUNT_TIMESTEPS)
-    iModel.create_last_timestep_optimizer()
+    iModel.create(COUNT_TIMESTEPS)
+    iModel.create_all_timesteps_optimizer()
     iModel.restore(path)
     anim=None
     def resetAnimation(gui,event=None):
@@ -70,7 +70,8 @@ if __name__ == "__main__":
         else:
             targetPosition=Vector2f(event.xdata,event.ydata)
 
-        gui.inferencer.reset()
+        #TODO check if this is necessary
+        #gui.inferencer.reset()
 
         gui.targetPosition=targetPosition
         if(not anim is None):
@@ -78,7 +79,7 @@ if __name__ == "__main__":
         anim=animation.FuncAnimation(fig,gui.animate,
                                      init_func=gui.initGraphics,
                                      frames=10000,
-                                     interval=30.)
+                                     interval=120.)
         anim._start()
 
     fig=plt.figure()

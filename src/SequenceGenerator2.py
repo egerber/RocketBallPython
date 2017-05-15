@@ -9,7 +9,7 @@ class SequenceGenerator2:
 
     #generates inputs within some range, where input(t+1) can be only a slight change compared to input(t)
     @staticmethod
-    def generateInputs_probOffset(countTimesteps,maxChange,probabilityChange):
+    def generateInputs_probOffset(countTimesteps,maxChange,maxSpeed,probabilityChange):
         inputs=np.random.uniform(low=-maxChange,high=maxChange,size=(countTimesteps,2))
 
         for i in range(1,countTimesteps):
@@ -20,35 +20,57 @@ class SequenceGenerator2:
                 inputs[i][0]=inputs[i-1][0]
                 inputs[i][1]=inputs[i-1][1]
 
+        np.clip(inputs,-maxSpeed,maxSpeed,inputs)
         return inputs
 
     #TODO change so that various timesteps can be inferred
     @staticmethod
-    def generateOutputs(rocketBall,inverseModel,inputs,count_iterations,count_timesteps=1,dt=1./30.):
+    def generateOutputs_relative(rocketBall,inverseModel,inputs,count_iterations,count_timesteps=1,dt=1./30.):
         outputs=np.empty((len(inputs),2))
 
         rocketBall.reset()
         inverseModel.reset()
 
-        prevPosition=Vector2f(rocketBall.position.x,rocketBall.position.y)
+        prevPosition=[rocketBall.position.x,rocketBall.position.y]
         for i in range(len(inputs)):
             motorInputs=inverseModel.infer([inputs[i] for i in range(count_timesteps)],count_iterations)
             rocketBall.setThrust1(motorInputs[0][0])
             rocketBall.setThrust2(motorInputs[0][1])
-            rocketBall.update(dt)
-            outputs[i][0]=rocketBall.position.x-prevPosition.x
-            outputs[i][1]=rocketBall.position.y-prevPosition.y
 
-            prevPosition.x=rocketBall.position.x
-            prevPosition.y=rocketBall.position.x
+            rocketBall.update(dt)
+            outputs[i][0]=rocketBall.position.x-prevPosition[0]
+            outputs[i][1]=rocketBall.position.y-prevPosition[1]
+
+            prevPosition[0]=rocketBall.position.x
+            prevPosition[1]=rocketBall.position.y
 
         return outputs
 
+    @staticmethod
+    def generateOutputs_absolute(rocketBall,inverseModel,inputs,count_iterations,count_timesteps=1,dt=1./30.):
+        outputs=np.empty((len(inputs),2))
+
+        rocketBall.reset()
+        inverseModel.reset()
+
+        startPosition=[rocketBall.position.x,rocketBall.position.y]
+        for i in range(len(inputs)):
+            motorInputs=inverseModel.infer([inputs[i] for i in range(count_timesteps)],count_iterations)
+            rocketBall.setThrust1(motorInputs[0][0])
+            rocketBall.setThrust2(motorInputs[0][1])
+
+            rocketBall.update(dt)
+            outputs[i][0]=rocketBall.position.x-startPosition[0]
+            outputs[i][1]=rocketBall.position.y-startPosition[1]
+
+
+
+        return outputs
 if __name__=="__main__":
     COUNT_ITERATIONS=30
     COUNT_TIMESTEPS=1
     COUNT_TIMESTEPS_INPUT=50
-    COUNT_TRAINING=500
+    COUNT_TRAINING=100
 
     rocketBall= RocketBall.standardVersion()
     rocketBall.enable_borders=False
@@ -75,12 +97,14 @@ if __name__=="__main__":
     rocketBall=rocketBall.standardVersion()
 
     begin=time.time()
-    inputs=[SequenceGenerator2.generateInputs_probOffset(COUNT_TIMESTEPS_INPUT,0.1,0.4).tolist() for i in range(COUNT_TRAINING)]
-    outputs=[SequenceGenerator2.generateOutputs(rocketBall,iModel,input,COUNT_ITERATIONS,COUNT_TIMESTEPS).tolist() for input in inputs]
+    inputs=[SequenceGenerator2.generateInputs_probOffset(COUNT_TIMESTEPS_INPUT,maxChange=0.01,maxSpeed=0.05,probabilityChange=0.4).tolist() for i in range(COUNT_TRAINING)]
+    outputs=[SequenceGenerator2.generateOutputs_relative(rocketBall,iModel,input,COUNT_ITERATIONS).tolist() for input in inputs]
 
     trainingsDict={"inputs": inputs,"outputs": outputs}
 
-    JsonHelper.save("../data/trainingData/training2_(500,50,30,1,0.1).json",trainingsDict)
+    #configuration order trainingsitems, timesteps, iterations, inferedTimesteps, maxStepsize
+    JsonHelper.save("../data/trainingData/training2_(relative,100,50,30,1,0.05).json",trainingsDict)
+
 
     end=time.time()
     print(end-begin)

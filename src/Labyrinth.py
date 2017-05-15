@@ -14,6 +14,17 @@ class Labyrinth:
 
         self.rows=rows
         self.columns=columns
+
+    @staticmethod
+    def standardVersion():
+        lab=Labyrinth(4,4,3,2)
+        lab.obstacle[0][0]=True
+        lab.obstacle[0][3]=True
+        lab.obstacle[3][0]=True
+        lab.obstacle[0][2]=True
+        lab.obstacle[2][2]=True
+        return lab
+
     def placeRandomPosition(self):
 
         while(True):
@@ -36,26 +47,45 @@ class Labyrinth:
         self.position.x = max(0+self.radius+epsilon, min(self.position.x, self.width-self.radius-epsilon))
         self.position.y=  max(0+self.radius+epsilon,min(self.position.y,self.height-self.radius-epsilon))
 
+        div_top,mod_top=divmod(self.position.y+self.radius,self.height_cell)
+        div_bottom,mod_bottom=divmod(self.position.y-self.radius,self.height_cell)
+        div_left,mod_left=divmod(self.position.x-self.radius,self.width_cell)
+        div_right,mod_right=divmod(self.position.x+self.radius,self.width_cell)
+
+
         #check for top-collision
-        bottom_i,_=divmod(self.position.y - self.radius, self.height_cell)
-        current_j,_=divmod(self.position.x, self.width_cell)
+        #bottom_i,bottom_mod=divmod(self.position.y - self.radius, self.height_cell)
+        #current_j,_=divmod(self.position.x, self.width_cell)
+        #top_i,top_mod=divmod(self.position.y +self.radius, self.height_cell)
+        #current_i,_=divmod(self.position.y, self.height_cell)
+        #right_i,right_mod=divmod(self.position.x + self.radius, self.width_cell)
+        #left_i,left_mod=divmod(self.position.x - self.radius, self.width_cell)
 
-        if((self.obstacle[int(bottom_i)][int(current_j)])):
-            self.position.y=(bottom_i+1)*self.height_cell+self.radius
-            print("top_collision")
-        top_i,_=divmod(self.position.y +self.radius, self.height_cell)
-        if((self.obstacle[int(top_i)][int(current_j)])):
-            self.position.y=(top_i)*self.height_cell-self.radius
-            print("bottom_collision")
-        current_i,_=divmod(self.position.y, self.height_cell)
-        left_i,_=divmod(self.position.x - self.radius, self.width_cell)
-        if((self.obstacle[int(current_i)][int(left_i)])):
-            self.position.x=(left_i+1)*self.width_cell+self.radius
+        distance_boundary_bottom=self.height_cell-mod_bottom
+        distance_boundary_top=mod_top
+        distance_boundary_left=self.width_cell-mod_left
+        distance_boundary_right=mod_right
 
-        right_i,_=divmod(self.position.x + self.radius, self.width_cell)
-        if((self.obstacle[int(current_i)][int(right_i)])):
-            self.position.x=(right_i)*self.width_cell-self.radius
 
+
+        epsilon=0.01 #add a small offset for detecting collision
+
+        if( (self.obstacle[int(div_bottom)][int(div_left)] or self.obstacle[int(div_bottom)][int(div_right)]) and distance_boundary_bottom<=-1*delta_y + epsilon):
+            self.position.y=(div_bottom+1)*self.height_cell+self.radius
+            #print("bottom_collision")
+
+        if((self.obstacle[int(div_top)][int(div_left)] or self.obstacle[int(div_top)][int(div_right)]) and distance_boundary_top<delta_y+ epsilon):
+            self.position.y=(div_top)*self.height_cell-self.radius
+            #print("top_collision")
+
+
+        if((self.obstacle[int(div_bottom)][int(div_left)] or self.obstacle[int(div_top)][int(div_left)]) and distance_boundary_left<=-1*delta_x + epsilon):
+            self.position.x=(div_left+1)*self.width_cell+self.radius
+            #print("left_collision")
+
+        if((self.obstacle[int(div_bottom)][int(div_right)] or self.obstacle[int(div_top)][int(div_right)]) and distance_boundary_right<=delta_x+ epsilon):
+            self.position.x=(div_right)*self.width_cell-self.radius
+            #print("right_collision")
         #check colisions
 if __name__=="__main__":
     lab=Labyrinth(4,4,4,2)
@@ -64,6 +94,6 @@ if __name__=="__main__":
     #lab.obstacle[2][:]=True
     lab.placeRandomPosition()
     for i in range(30):
-        lab.move(-0.1,0.05)
+        lab.move(-0.13,0.05)
 
     print(lab.position)

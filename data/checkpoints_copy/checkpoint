@@ -1,2 +1,2 @@
-model_checkpoint_path: "C:/Users/Gerber/IdeaProjects/RocketBallPython/src/models/../../data/checkpoints/LSTMCell(16)_2_2(small_training).chkpt"
-all_model_checkpoint_paths: "C:/Users/Gerber/IdeaProjects/RocketBallPython/src/models/../../data/checkpoints/LSTMCell(16)_2_2(small_training).chkpt"
+model_checkpoint_path: "C:/Users/Gerber/IdeaProjects/RocketBallPython/src/models/../../data/checkpoints/LSTMCell(16)_4_2(relative_noborders).chkpt"
+all_model_checkpoint_paths: "C:/Users/Gerber/IdeaProjects/RocketBallPython/src/models/../../data/checkpoints/LSTMCell(16)_4_2(relative_noborders).chkpt"

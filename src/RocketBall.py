@@ -10,8 +10,9 @@ class RocketBall:
 
     @staticmethod
     def standardVersion():
-        return RocketBall(9.81,0.0001,0.06,0.0012,-1.5,1.5,2.0)
-
+        rocketBall=RocketBall(9.81,0.0001,0.06,0.0012,-1.5,1.5,2.0)
+        rocketBall.enable_borders=False
+        return rocketBall
     def reset(self):
 
         self.gvec=Vector2f(0.,0.)#Check if okay
