@@ -46,7 +46,7 @@ if __name__ == "__main__":
         "cell_type":"LSTMCell",
         "num_hidden_units": 16,
         "size_output":2,
-        "size_input":2,
+        "size_input":4,
         "use_biases":True,
         "use_peepholes":True,
         "tag":"relative_noborders"
@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
     iModel=inverseModel(configuration)
 
-    iModel.create(COUNT_TIMESTEPS)
+    iModel.create_self_feeding(COUNT_TIMESTEPS)
     iModel.create_all_timesteps_optimizer()
     iModel.restore(path)
     anim=None

@@ -1,0 +1,10 @@
+THINKABOUT
+- how to access forward Model 2
+
+TODO:
+- generate good trainigdata for forward model 2
+- train rocketBall with non zero initial state
+- Implement Grid Labyrinth (movement x,y€ {-1,1})
+    -> Train forward Modell
+    ->
+- Train forward Model 2 (using inverse 4-2 model, self-feeding), where at each timestep the real information of the rocketBall is given)

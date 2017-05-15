@@ -53,9 +53,9 @@ class RocketBallForward2Animation(RocketBallGUI):
         self.drawAll()
 
 if __name__ == "__main__":
-    COUNT_TIMESTEPS=50
+    COUNT_TIMESTEPS=100
 
-    trainingDict=JsonHelper.restore("../../data/trainingData/training2_(relative,100,50,30,1,0.05).json")
+    trainingDict=JsonHelper.restore("../../data/trainingData/training2_(absolute,5,50,30,1,0.05).json")
     inputs=trainingDict["inputs"]
     outputs=trainingDict["outputs"]
 
@@ -67,12 +67,6 @@ if __name__ == "__main__":
     anim=None
     def resetAnimation(gui,event=None):
         global anim,iModel,path
-
-        #rocketBall.reset()
-        if(event is None):
-            targetPosition=Vector2f(0.,1.)
-        else:
-            targetPosition=Vector2f(event.xdata,event.ydata)
 
         rand_index=np.random.randint(0,len(inputs)-1)
         gui.reset(inputs[rand_index],outputs[rand_index])
@@ -88,7 +82,7 @@ if __name__ == "__main__":
     fig=plt.figure()
 
     rand_index=np.random.randint(0,len(inputs)-1)
-    gui=RocketBallForward2Animation(rocketBall,inputs[rand_index],outputs[rand_index],relative=True)
+    gui=RocketBallForward2Animation(rocketBall,inputs[rand_index],outputs[rand_index],relative=False)
     fig.canvas.mpl_connect('key_press_event', gui.keypress)
     fig.canvas.mpl_connect('key_release_event',gui.keyrelease)
     fig.canvas.mpl_connect('button_press_event',lambda event: resetAnimation(gui,event))

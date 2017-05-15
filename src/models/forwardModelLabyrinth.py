@@ -21,11 +21,11 @@ if __name__=="__main__":
         "size_input":4,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"Labyrinth_200_0.2"
+        "tag":"Labyrinth_200_0.2_custom(0.3)"
     }
 
     lab=Labyrinth.standardVersion()
-    inputs=[LabyrinthSequenceGenerator.generateInputs_4tuple(lab,COUNT_TIMESTEPS,MAX_STEPSIZE) for i in range(COUNT_TRAININGS)]
+    inputs=[LabyrinthSequenceGenerator.generateCustomInputs_4tuple(lab,COUNT_TIMESTEPS,MAX_STEPSIZE,0.3) for i in range(COUNT_TRAININGS)]
     outputs=[LabyrinthSequenceGenerator.generateOutputs_2tuple(lab,input) for input in inputs]
 
     fmodel=forwardModel.createNew(configuration,COUNT_TIMESTEPS)

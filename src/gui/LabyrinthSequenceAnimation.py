@@ -92,7 +92,7 @@ if __name__ == "__main__":
     lab=Labyrinth.standardVersion()
     fig=plt.figure()
 
-    inputs=LabyrinthSequenceGenerator.generateInputs_4tuple(lab,COUNT_TIMESTEPS,MAX_STEPSIZE)
+    inputs=LabyrinthSequenceGenerator.generateCustomInputs_4tuple(lab,COUNT_TIMESTEPS,MAX_STEPSIZE,0.3)
     gui=LabyrinthSequenceAnimation(lab,inputs)
 
     fig.canvas.mpl_connect('key_press_event', gui.keypress)

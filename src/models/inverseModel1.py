@@ -33,7 +33,7 @@ class inverseModel:
         ##
         self.count_timesteps=None
 
-    def create_last_timestep_optimizer(self):
+    def create_last_timestep_optimizer(self,clip_min=0.,clip_max=1.):
         last_output=self.outputs[-1]
         with vs.variable_scope("LossCalculation") as loss:
             self.rmse=tf.sqrt(tf.square(tf.subtract(self.target,last_output)),name="RMSE")
@@ -46,9 +46,9 @@ class inverseModel:
 
             self.minimizer=self.optimizer.minimize(self.mse,var_list=[self.inputs])
 
-            self.clipping=self.inputs.assign(tf.clip_by_value(self.inputs, 0.,1.))
+            self.clipping=self.inputs.assign(tf.clip_by_value(self.inputs, clip_min,clip_max))
 
-    def create_all_timesteps_optimizer(self):
+    def create_all_timesteps_optimizer(self,clip_min=0.,clip_max=1.):
         with vs.variable_scope("LossCalculation") as loss:
             self.rmse=tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(self.target,self.outputs)),axis=2),name="RMSE")
             self.mse=tf.multiply(0.5,tf.reduce_sum(tf.square(tf.subtract(self.target,self.outputs)),axis=2),name="MSE")
@@ -60,10 +60,10 @@ class inverseModel:
 
             self.minimizer=self.optimizer.minimize(self.mse,var_list=[self.inputs])
 
-            self.clipping=self.inputs.assign(tf.clip_by_value(self.inputs, 0.0,1.0))
+            self.clipping=self.inputs.assign(tf.clip_by_value(self.inputs, clip_min,clip_max))
 
     #TODO works only with outputsize=4 so far, needs to be generalized
-    def create_dontcare_optimizer(self):
+    def create_dontcare_optimizer(self,clip_min=0.,clip_max=1.):
         with vs.variable_scope("LossCalculation") as loss:
 
             slice_do_care=tf.slice(self.outputs,[0,0,0],[1,self.count_timesteps,2])
@@ -79,7 +79,7 @@ class inverseModel:
 
             self.minimizer=self.optimizer.minimize(self.mse,var_list=[self.inputs])
 
-            self.clipping=self.inputs.assign(tf.clip_by_value(self.inputs, 0.,1.))
+            self.clipping=self.inputs.assign(tf.clip_by_value(self.inputs, clip_min, clip_max))
 
 
     def create_singleOutput(self,count_timesteps):
@@ -144,14 +144,14 @@ class inverseModel:
         self.inputs=tf.Variable(tf.random_uniform([1,count_timesteps,self.configuration["size_input"]-self.configuration["size_output"]],minval=0.,maxval=1.))
         self.target=tf.placeholder(tf.float32,[1,count_timesteps,self.configuration["size_output"]])
 
-        self.speed=tf.placeholder(tf.float32,[1,self.configuration["size_output"]])
+        self.speed = tf.placeholder(tf.float32,[1,self.configuration["size_output"]])
         self.c_state = tf.placeholder(tf.float32,[1,self.configuration["num_hidden_units"]])
         self.h_state = tf.placeholder(tf.float32,[1,self.configuration["num_hidden_units"]])
         self.last_state=tf.contrib.rnn.LSTMStateTuple(self.c_state, self.h_state)
 
         inputData=tf.unstack(tf.transpose(self.inputs,[1,0,2]))
-        lstm_outputs=[]
-        final_outputs=[]
+        lstm_outputs = []
+        final_outputs = []
         with vs.variable_scope("inverse/network"):
             cell=tf.contrib.rnn.LSTMCell(num_units=self.configuration["num_hidden_units"],use_peepholes=self.configuration["use_peepholes"],state_is_tuple=True)
             with vs.variable_scope("OUTPUT"):
@@ -159,7 +159,6 @@ class inverseModel:
                                              [self.configuration["num_hidden_units"],self.configuration["size_output"]],
                                              initializer=tf.random_normal_initializer())
                 biases_outputs=vs.get_variable("biases_output",[1,self.configuration["size_output"]],initializer=tf.random_normal_initializer())
-
             _speed=self.speed
             with vs.variable_scope("LSTM") as lstm_scope:
                 jointInput=tf.concat([inputData[0],_speed],1)

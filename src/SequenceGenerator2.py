@@ -55,14 +55,14 @@ class SequenceGenerator2:
 
         startPosition=[rocketBall.position.x,rocketBall.position.y]
         for i in range(len(inputs)):
-            motorInputs=inverseModel.infer([inputs[i] for i in range(count_timesteps)],count_iterations)
+            motorInputs=inverseModel.infer_self_feeding([inputs[i] for i in range(count_timesteps)],count_iterations)
             rocketBall.setThrust1(motorInputs[0][0])
             rocketBall.setThrust2(motorInputs[0][1])
 
             rocketBall.update(dt)
             outputs[i][0]=rocketBall.position.x-startPosition[0]
             outputs[i][1]=rocketBall.position.y-startPosition[1]
-
+            inverseModel.last_speed=[[rocketBall.speed.x,rocketBall.speed.y]]
 
 
         return outputs
@@ -70,7 +70,7 @@ if __name__=="__main__":
     COUNT_ITERATIONS=30
     COUNT_TIMESTEPS=1
     COUNT_TIMESTEPS_INPUT=50
-    COUNT_TRAINING=100
+    COUNT_TRAINING=500
 
     rocketBall= RocketBall.standardVersion()
     rocketBall.enable_borders=False
@@ -79,7 +79,7 @@ if __name__=="__main__":
         "cell_type":"LSTMCell",
         "num_hidden_units": 16,
         "size_output":2,
-        "size_input":2,
+        "size_input":4,
         "use_biases":True,
         "use_peepholes":True,
         "tag":"relative_noborders"
@@ -90,20 +90,22 @@ if __name__=="__main__":
 
     iModel=inverseModel(configuration)
 
-    iModel.create(COUNT_TIMESTEPS)
+    iModel.create_self_feeding(COUNT_TIMESTEPS)
     iModel.create_all_timesteps_optimizer()
     iModel.restore(path)
 
     rocketBall=rocketBall.standardVersion()
 
     begin=time.time()
-    inputs=[SequenceGenerator2.generateInputs_probOffset(COUNT_TIMESTEPS_INPUT,maxChange=0.01,maxSpeed=0.05,probabilityChange=0.4).tolist() for i in range(COUNT_TRAINING)]
-    outputs=[SequenceGenerator2.generateOutputs_relative(rocketBall,iModel,input,COUNT_ITERATIONS).tolist() for input in inputs]
+    inputs=[SequenceGenerator2.generateInputs_probOffset(COUNT_TIMESTEPS_INPUT,maxChange=0.009,maxSpeed=0.06,probabilityChange=0.4).tolist() for i in range(COUNT_TRAINING)]
+    #inputs=[[[0.1,0.] for i in range(COUNT_TIMESTEPS_INPUT)] for j in range(COUNT_TRAINING)]
+
+    outputs=[SequenceGenerator2.generateOutputs_absolute(rocketBall,iModel,input,COUNT_ITERATIONS).tolist() for input in inputs]
 
     trainingsDict={"inputs": inputs,"outputs": outputs}
 
     #configuration order trainingsitems, timesteps, iterations, inferedTimesteps, maxStepsize
-    JsonHelper.save("../data/trainingData/training2_(relative,100,50,30,1,0.05).json",trainingsDict)
+    JsonHelper.save("../data/trainingData/training2_(absolute4_2,500,50,30,0.009,0.06).json",trainingsDict)
 
 
     end=time.time()
