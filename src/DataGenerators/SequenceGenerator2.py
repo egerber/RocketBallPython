@@ -10,8 +10,8 @@ class SequenceGenerator2:
     #generates inputs within some range, where input(t+1) can be only a slight change compared to input(t)
     @staticmethod
     def generateInputs_probOffset(countTimesteps,maxChange,maxSpeed,probabilityChange):
-        inputs=np.random.uniform(low=-maxChange,high=maxChange,size=(countTimesteps,2))
-
+        inputs=np.ranom.uniform(low=-maxChange,high=maxChange,size=(countTimesteps,2))
+        print(np.mean(inputs[:,0]))
         for i in range(1,countTimesteps):
             if(np.random.rand()<=probabilityChange):
                 inputs[i][0]=inputs[i-1][0]+inputs[i][0]
@@ -86,7 +86,7 @@ if __name__=="__main__":
     }
 
 
-    path=checkpointDirectory=os.path.dirname(__file__)+"/../data/checkpoints/"+createConfigurationString(configuration)+".chkpt"
+    path=checkpointDirectory=os.path.dirname(__file__)+"/../../data/checkpoints/"+createConfigurationString(configuration)+".chkpt"
 
     iModel=inverseModel(configuration)
 
@@ -97,15 +97,17 @@ if __name__=="__main__":
     rocketBall=rocketBall.standardVersion()
 
     begin=time.time()
-    inputs=[SequenceGenerator2.generateInputs_probOffset(COUNT_TIMESTEPS_INPUT,maxChange=0.009,maxSpeed=0.06,probabilityChange=0.4).tolist() for i in range(COUNT_TRAINING)]
+    inputs=SequenceGenerator2.generateInputs_probOffset(1000,0.009,0.06,0.4)
+    print(inputs)
+    #inputs=[SequenceGenerator2.generateInputs_probOffset(COUNT_TIMESTEPS_INPUT,maxChange=0.009,maxSpeed=0.06,probabilityChange=0.4).tolist() for i in range(COUNT_TRAINING)]
     #inputs=[[[0.1,0.] for i in range(COUNT_TIMESTEPS_INPUT)] for j in range(COUNT_TRAINING)]
 
-    outputs=[SequenceGenerator2.generateOutputs_absolute(rocketBall,iModel,input,COUNT_ITERATIONS).tolist() for input in inputs]
+    #outputs=[SequenceGenerator2.generateOutputs_absolute(rocketBall,iModel,input,COUNT_ITERATIONS).tolist() for input in inputs]
 
-    trainingsDict={"inputs": inputs,"outputs": outputs}
+    #trainingsDict={"inputs": inputs,"outputs": outputs}
 
     #configuration order trainingsitems, timesteps, iterations, inferedTimesteps, maxStepsize
-    JsonHelper.save("../data/trainingData/training2_(absolute4_2,500,50,30,0.009,0.06).json",trainingsDict)
+    #JsonHelper.save("../data/trainingData/training2_(absolute4_2,500,50,30,0.009,0.06).json",trainingsDict)
 
 
     end=time.time()

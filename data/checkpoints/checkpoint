@@ -1,2 +1,2 @@
-model_checkpoint_path: "C:\\Users\\Gerber\\IdeaProjects\\RocketBallPython\\src\\models/../../data/checkpoints/LSTMCell(16)_4_2(Labyrinth_200_0.2_custom(0.3)).chkpt"
-all_model_checkpoint_paths: "C:\\Users\\Gerber\\IdeaProjects\\RocketBallPython\\src\\models/../../data/checkpoints/LSTMCell(16)_4_2(Labyrinth_200_0.2_custom(0.3)).chkpt"
+model_checkpoint_path: "C:\\Users\\Gerber\\IdeaProjects\\RocketBallPython\\src\\models/../../data/checkpoints/LSTMCell(16)_31_2(GridLabyrinth_50_one_hot).chkpt"
+all_model_checkpoint_paths: "C:\\Users\\Gerber\\IdeaProjects\\RocketBallPython\\src\\models/../../data/checkpoints/LSTMCell(16)_31_2(GridLabyrinth_50_one_hot).chkpt"

@@ -1,8 +1,7 @@
 from src.gui.RocketBallGUI import *
-from src.models.inverseModel1 import *
-from numpy.linalg import norm
 from src.helper.JsonHelper import JsonHelper
-from src.SequenceGenerator2 import SequenceGenerator2
+from src.models.inverseModel1 import *
+
 
 class RocketBallForward2Animation(RocketBallGUI):
 
@@ -55,7 +54,7 @@ class RocketBallForward2Animation(RocketBallGUI):
 if __name__ == "__main__":
     COUNT_TIMESTEPS=100
 
-    trainingDict=JsonHelper.restore("../../data/trainingData/training2_(absolute,5,50,30,1,0.05).json")
+    trainingDict=JsonHelper.restore("../../data/trainingData/training2_(absolute4_2,500,50,30,0.009,0.06).json")
     inputs=trainingDict["inputs"]
     outputs=trainingDict["outputs"]
 

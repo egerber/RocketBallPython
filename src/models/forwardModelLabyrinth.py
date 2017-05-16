@@ -1,8 +1,6 @@
+from src.DataGenerators.LabyrinthSequenceGenerator import *
+
 from src.models.forwardModel import *
-from src.models.inverseModel1 import inverseModel
-from src.SequenceGenerator2 import SequenceGenerator2
-from src.helper.JsonHelper import JsonHelper
-from src.LabyrinthSequenceGenerator import *
 
 if __name__=="__main__":
 

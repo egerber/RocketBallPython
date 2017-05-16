@@ -4,7 +4,25 @@ THINKABOUT
 TODO:
 - generate good trainigdata for forward model 2
 - train rocketBall with non zero initial state
-- Implement Grid Labyrinth (movement x,y€ {-1,1})
-    -> Train forward Modell
-    ->
-- Train forward Model 2 (using inverse 4-2 model, self-feeding), where at each timestep the real information of the rocketBall is given)
+- Generalize the terms (such as speed) in inverse model so it can work with obstacle information and alike
+- change move() procedures to take arrays
+- Generate SequenceData including a variety of labyrinths with a fixed number of obstacles
+- self-feeding mechanism that feeds constant labyrinth information into network
+
+POSSIBLE:
+- Labyrinth takes only one value which maps to one certain movement (e.g. 0->left, 1->right, 2->up, 3->down)
+
+DEBUG:
+- Check why generated movement from sequencegenerator2 always moves to the right and down only
+
+TAGESZIEL:
+- richtige Daten für ForwardModel2 generieren
+- ForwardModel2 auf verschiedene Trainingssätze trainieren
+- [Visualize anticipation for LabyrinthGrid Inverse Model]
+
+DONE
+- LabyrinthGrid fertig programmieren
+- GUI für LabyrinthGrid
+- LabyrinthForwardModel für Gridversion trainieren (verschiedene Möglichkeiten für Ansteuerung)
+- Run InverseModel of LabyrinthGrid
+- [Train GridLabyrinth Model by adding additional information about the labyrinth that it is in]

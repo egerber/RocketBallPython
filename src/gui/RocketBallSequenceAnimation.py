@@ -1,7 +1,6 @@
-from src.RocketBall import RocketBall
-from src.SequenceGenerator import SequenceGenerator
+from src.DataGenerators.SequenceGenerator import SequenceGenerator
 from src.gui.RocketBallGUI import *
-from src.models import inverseModel1
+
 
 class RocketBallSequenceAnimation(RocketBallGUI):
 

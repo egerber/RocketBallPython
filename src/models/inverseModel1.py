@@ -1,12 +1,13 @@
-import tensorflow as tf
-import numpy as np
-from src.SequenceGenerator import SequenceGenerator
-from src.RocketBall import RocketBall
-from tensorflow.python.ops import variable_scope as vs
 import time
-from src.models.helper import *
+
 import os
+import tensorflow as tf
+from tensorflow.python.ops import variable_scope as vs
+
+from src.RocketBall import RocketBall
 from src.models.forwardModel import forwardModel
+from src.models.helper import *
+
 
 class inverseModel:
 
@@ -168,6 +169,8 @@ class inverseModel:
                 #lstm_outputs.append(lstm_output)
                 final_outputs.append(_speed)
                 (self.next_c,self.next_h)=state
+
+                #TODO when training labyrinth with obstacle information,append the array of obstacles here
                 self.next_speed=_speed
 
             with vs.variable_scope("LSTM",reuse=True) as lstm_scope:

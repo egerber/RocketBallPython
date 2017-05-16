@@ -1,13 +1,15 @@
 
-import tensorflow as tf
-import numpy as np
-from src.SequenceGenerator import SequenceGenerator
-from src.RocketBall import RocketBall
-from tensorflow.python.ops import variable_scope as vs
 import time
-from src.models.helper import *
+
 import os
+import tensorflow as tf
 from tensorflow.python.client import timeline
+from tensorflow.python.ops import variable_scope as vs
+
+from src.DataGenerators.SequenceGenerator import SequenceGenerator
+from src.RocketBall import RocketBall
+from src.models.helper import *
+
 
 class forwardModel:
 

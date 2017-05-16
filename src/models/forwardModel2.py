@@ -1,7 +1,6 @@
+from src.helper.JsonHelper import JsonHelper
 from src.models.forwardModel import *
 from src.models.inverseModel1 import inverseModel
-from src.SequenceGenerator2 import SequenceGenerator2
-from src.helper.JsonHelper import JsonHelper
 
 if __name__=="__main__":
 
@@ -30,7 +29,7 @@ if __name__=="__main__":
         "size_input":2,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"forwardModel2_50_30_1_0.1"
+        "tag":"forwardModel2(absolute4_2,500,50,30,0.009,0.06)"
     }
 
 
@@ -44,7 +43,7 @@ if __name__=="__main__":
 
     rocketBall=rocketBall.standardVersion()
 
-    trainingDict=JsonHelper.restore("../../data/trainingData/training2_(500,50,30,1,0.1).json")
+    trainingDict=JsonHelper.restore("../../data/trainingData/training2_(absolute4_2,500,50,30,0.009,0.06).json")
     inputs=trainingDict["inputs"]
     outputs=trainingDict["outputs"]
 
