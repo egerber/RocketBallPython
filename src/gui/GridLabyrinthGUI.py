@@ -69,21 +69,20 @@ class GridLabyrinthGUI:
         self.drawAll()
 
     def keypress(self,event):
-        print("hier")
         if(event.key=="left"):
-            self.labyrinth.move(-1,0)
+            self.labyrinth.move([-1,0])
         elif(event.key=="right"):
-            self.labyrinth.move(1,0)
+            self.labyrinth.move([1,0])
         elif(event.key=="up"):
-            self.labyrinth.move(0,1)
+            self.labyrinth.move([0,1])
         elif(event.key=="down"):
-            self.labyrinth.move(0,-1)
+            self.labyrinth.move([0,-1])
 
 
 
 if __name__ == "__main__":
     lab=LabyrinthGrid.standardVersion()
-
+    lab.setRandomObstacles(30,3)
     fig=plt.figure()
     gui=GridLabyrinthGUI(lab)
 

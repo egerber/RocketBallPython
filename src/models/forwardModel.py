@@ -28,6 +28,9 @@ class forwardModel:
         self.data=None
         self.target=None
 
+        #this information allows to fetch the correct weights for saving depending on the created model
+        self.version="singlebatch"
+
     @staticmethod
     def createNew(configuration,count_timesteps,device='/cpu:0'):
         fmodel=forwardModel(configuration)
@@ -53,6 +56,34 @@ class forwardModel:
         tf.summary.scalar(name+"/Max",max)
         tf.summary.scalar(name+"/Std",std)
 
+    def create_dynamicRNN(self,count_timesteps,device='/cpu_0'):
+        self.version="multibatch"
+        with tf.device(device):
+            self.data=tf.placeholder(tf.float32,[None,count_timesteps,self.configuration["size_input"]])
+            self.target=tf.placeholder(tf.float32,[None,count_timesteps,self.configuration["size_output"]])
+
+
+            with vs.variable_scope("network"):
+
+                inputData=tf.unstack(tf.transpose(self.data,[1,0,2]))
+
+                with vs.variable_scope("LSTM") as lstm_scope:
+                    cell=tf.contrib.rnn.LSTMCell(num_units=self.configuration["num_hidden_units"],use_peepholes=self.configuration["use_peepholes"],state_is_tuple=True)
+                    lstm_outputs,state=tf.nn.dynamic_rnn(cell,self.data,dtype=tf.float32,scope=lstm_scope)
+                    lstm_outputs=tf.unstack(tf.transpose(lstm_outputs,[1,0,2]))
+                with vs.variable_scope("OUTPUT"):
+                    output_layer=vs.get_variable("weights_output",
+                                                 [self.configuration["num_hidden_units"],self.configuration["size_output"]],
+                                                 initializer=tf.random_normal_initializer())
+                    if(self.configuration["use_biases"]):
+                        biases_outputs=vs.get_variable("biases_output",[1,self.configuration["size_output"]],
+                                                       initializer=tf.random_normal_initializer())
+                        outputs=[tf.matmul(out_t,output_layer,name="Multiply_lstm_output")+biases_outputs for out_t in lstm_outputs]
+                    else:
+                        outputs=[tf.matmul(out_t,output_layer,name="Multiply_lstm_output") for out_t in lstm_outputs]
+
+                    outputs=tf.transpose(outputs,[1,0,2],"Transpose_output")
+            self.outputs=outputs
     def create(self,count_timesteps,device='/cpu:0'):
         t_begin=time.time()
 
@@ -104,7 +135,7 @@ class forwardModel:
 
 
 
-    def train(self,inputs,outputs,count_epochs,logging=True,save=True,restore=None,override=False):
+    def train(self,inputs,outputs,count_epochs,batchsize=1,logging=True,save=True,restore=None,override=False):
         t_begin=time.time()
 
         with vs.variable_scope("LossCalculation") as loss:
@@ -115,7 +146,6 @@ class forwardModel:
                 self.writeSummary(rmse,"RMSE")
                 self.writeSummary(mse,"MSE")
         optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate,beta1=self.beta1,beta2=self.beta2,epsilon=self.epsilon).minimize(mse,name="MSE_OPTIMIZER")
-
 
         #initialize vars from optimizer
         uninitialized_vars = []
@@ -139,12 +169,13 @@ class forwardModel:
         if(logging):
             writer=tf.summary.FileWriter(loggingDirectory+confString,self.sess.graph)
 
+        count_batches=int(len(inputs)/batchsize)
         for i in range(count_epochs):
             sum_error=0.
             begin=time.time()#take time before calculating the epoche
-            for j in range(len(inputs)):
-                input_=[inputs[j]]
-                output_=[outputs[j]]
+            for j in range(count_batches):
+                input_=inputs[j*batchsize:(j+1)*batchsize]
+                output_=outputs[j*batchsize:(j+1)*batchsize]
 
                 _,r=self.sess.run([optimizer,rmse],feed_dict={self.data:input_,self.target:output_})
                 sum_error+=r
@@ -158,6 +189,8 @@ class forwardModel:
             end=time.time()
             print("Epoch " + str(i) + ": " + str(sum_error/len(inputs)))
             print("Time: ", str(end-begin))
+
+
 
         t_end=time.time()
         print("Training Done! (time: "+str(t_end-t_begin)+")")
@@ -194,15 +227,24 @@ class forwardModel:
 
     def save(self,path):
         if(self.saver is None):
-            with vs.variable_scope("network",reuse=True):
-                self.saver=tf.train.Saver(var_list={"LSTM/w_f_diag": vs.get_variable("LSTM/w_f_diag"),
-                                                    "LSTM/w_i_diag": vs.get_variable("LSTM/w_i_diag"),
-                                                    "LSTM/w_o_diag": vs.get_variable("LSTM/w_o_diag"),
-                                                    "LSTM/biases": vs.get_variable("LSTM/biases"),
-                                                    "LSTM/weights": vs.get_variable("LSTM/weights"),
-                                                    "OUTPUT/weights_output":vs.get_variable("OUTPUT/weights_output"),
-                                                    "OUTPUT/biases_output":vs.get_variable("OUTPUT/biases_output")})
-
+            if(self.version=="singlebatch"):
+                with vs.variable_scope("network",reuse=True):
+                    self.saver=tf.train.Saver(var_list={"LSTM/w_f_diag": vs.get_variable("LSTM/w_f_diag"),
+                                                        "LSTM/w_i_diag": vs.get_variable("LSTM/w_i_diag"),
+                                                        "LSTM/w_o_diag": vs.get_variable("LSTM/w_o_diag"),
+                                                        "LSTM/biases": vs.get_variable("LSTM/biases"),
+                                                        "LSTM/weights": vs.get_variable("LSTM/weights"),
+                                                        "OUTPUT/weights_output":vs.get_variable("OUTPUT/weights_output"),
+                                                        "OUTPUT/biases_output":vs.get_variable("OUTPUT/biases_output")})
+            elif(self.version=="multibatch"):
+                with vs.variable_scope("network",reuse=True):
+                    self.saver=tf.train.Saver(var_list={"LSTM/w_f_diag": vs.get_variable("LSTM/lstm_cell/w_f_diag"),
+                                                        "LSTM/w_i_diag": vs.get_variable("LSTM/lstm_cell/w_i_diag"),
+                                                        "LSTM/w_o_diag": vs.get_variable("LSTM/lstm_cell/w_o_diag"),
+                                                        "LSTM/biases": vs.get_variable("LSTM/lstm_cell/biases"),
+                                                        "LSTM/weights": vs.get_variable("LSTM/lstm_cell/weights"),
+                                                        "OUTPUT/weights_output":vs.get_variable("OUTPUT/weights_output"),
+                                                        "OUTPUT/biases_output":vs.get_variable("OUTPUT/biases_output")})
 
         self.saver.save(self.sess, path)
 
@@ -211,15 +253,11 @@ class forwardModel:
         prediction=self.sess.run(self.outputs,feed_dict={self.data:[inputs]})
         return prediction[0]
 
-    #runs one timestep of a network and returns output
-    def runSingleTimestep(self,input):
-        pass
-
 
 if __name__=='__main__':
-    COUNT_EPOCHS=31
-    COUNT_TIMESTEPS=80
-    NUM_TRAINING=2000
+    COUNT_EPOCHS=4
+    COUNT_TIMESTEPS=20
+    NUM_TRAINING=100
 
     rocketBall= RocketBall.standardVersion()
 
@@ -234,11 +272,13 @@ if __name__=='__main__':
         "size_input":len(inputs[0][0]),
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"relative_noborders"
+        "tag":"test"
     }
 
+    fmodel=forwardModel(configuration)
+    fmodel.create_dynamicRNN(COUNT_TIMESTEPS)
+    fmodel.init()
 
-    fmodel=forwardModel.createNew(configuration,COUNT_TIMESTEPS)
     path=os.path.dirname(__file__)+"/../../data/checkpoints/"+createConfigurationString(configuration)+".chkpt"
 
-    fmodel.train(inputs, outputs,count_epochs=COUNT_EPOCHS,logging=True,save=True)
+    fmodel.train(inputs, outputs,batchsize=2,count_epochs=COUNT_EPOCHS,logging=True,save=True)

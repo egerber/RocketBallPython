@@ -9,9 +9,6 @@ TODO:
 - Generate SequenceData including a variety of labyrinths with a fixed number of obstacles
 - self-feeding mechanism that feeds constant labyrinth information into network
 
-POSSIBLE:
-- Labyrinth takes only one value which maps to one certain movement (e.g. 0->left, 1->right, 2->up, 3->down)
-
 DEBUG:
 - Check why generated movement from sequencegenerator2 always moves to the right and down only
 
@@ -20,9 +17,13 @@ TAGESZIEL:
 - ForwardModel2 auf verschiedene Trainingssätze trainieren
 - [Visualize anticipation for LabyrinthGrid Inverse Model]
 
-DONE
-- LabyrinthGrid fertig programmieren
-- GUI für LabyrinthGrid
-- LabyrinthForwardModel für Gridversion trainieren (verschiedene Möglichkeiten für Ansteuerung)
-- Run InverseModel of LabyrinthGrid
-- [Train GridLabyrinth Model by adding additional information about the labyrinth that it is in]
+TAGESZIEL:
+- extend sequenceGenerator for labyrinth to create random labyrinth configuration and movements in it
+    -> train network on it
+    -> use seed to always generate the same obstacle configurations
+    -> obstacle generator (takes: count_obstacles, seed)
+- concept for self feeding mechanism including static input of obstalce array
+- set speed to one hot vector after the iterations are done
+
+DONE:
+- Change code to work with batchsize

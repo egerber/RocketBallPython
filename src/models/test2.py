@@ -1,8 +1,8 @@
 import tensorflow as tf
 import numpy as np
 from tensorflow.python.ops import variable_scope as vs
-from SequenceGenerator import SequenceGenerator
-from RocketBall import RocketBall
+from src.DataGenerators.SequenceGenerator import SequenceGenerator
+from src.RocketBall import RocketBall
 
 NUM_HIDDEN_UNITS=10
 

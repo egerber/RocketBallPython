@@ -13,15 +13,23 @@ class LabyrinthGrid:
 
     @staticmethod
     def standardVersion():
-        lab=LabyrinthGrid(5,5)
-        lab.obstacle[0][1]=True
-        lab.obstacle[0][3]=True
-        lab.obstacle[3][1]=True
-        lab.obstacle[0][2]=True
-        lab.obstacle[2][2]=True
-
+        lab=LabyrinthGrid(10,10)
+        lab.setRandomObstacles(5,100)
         lab.placeRandomPosition()
         return lab
+
+    def setRandomObstacles(self,count_obstacles,seed=100):
+        self.obstacle=np.zeros((self.rows,self.columns),dtype=np.bool) #holds list of [i,j] refering to row i and column j
+        np.random.seed(seed)
+
+        count_fields=self.rows*self.columns
+
+        indices=[divmod(index,self.rows) for index in np.random.choice(range(count_fields),count_obstacles,replace=False)]
+
+
+        for i in indices:
+            self.obstacle[i[0]][i[1]]=True
+
 
     def placeRandomPosition(self):
 
@@ -112,7 +120,5 @@ if __name__=="__main__":
     #lab.obstacle[2][:]=True
     lab.placeRandomPosition()
     #lab.position=[0,1]
-    for i in range(30):
-        lab.move_one_hot([0.1,0.2,0.8,-0.3])
-        print(lab.position)
-        print(lab.normed_position())
+    lab.setRandomObstacles(24,101)
+    print(lab.obstacle)
