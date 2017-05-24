@@ -1,15 +1,18 @@
 from src.gui.GridLabyrinthGUI import *
 from src.models.inverseModel1 import *
 from numpy.linalg import norm
+from src.DataGenerators.GridLabyrinthSequenceGenerator import GridLabyrinthSequenceGenerator
+from src.models.inverseModelGridLabyrinth import inverseModelGridLabyrinth
 
 class GridLabyrinthInferenceAnimation(GridLabyrinthGUI):
 
-    def __init__(self,labyrinth,targetPosition,inferencer,count_iterations,count_timesteps):
+    def __init__(self,labyrinth,targetPosition,obstacle_information,inferencer,count_iterations,count_timesteps):
         GridLabyrinthGUI.__init__(self,labyrinth)
         self.targetPosition=targetPosition
         self.inferencer=inferencer
         self.count_iterations=count_iterations
         self.count_timesteps=count_timesteps
+        self.obstacle_information=obstacle_information
 
     def animate(self,i):
 
@@ -18,44 +21,48 @@ class GridLabyrinthInferenceAnimation(GridLabyrinthGUI):
         #np.clip(discrepancy,a_min=-0.05,a_max=0.05,out=discrepancy)
         #discrepancy=discrepancy/norm(discrepancy) *distance
 
-        nextInput=self.inferencer.infer_self_feeding([[self.targetPosition.x,self.targetPosition.y] for i in range(self.count_timesteps)],self.count_iterations)[0]
+        nextInput=self.inferencer.infer_self_feeding([[self.targetPosition.x,self.targetPosition.y] for i in range(self.count_timesteps)],self.count_iterations,
+                                                     self.obstacle_information)[0]
         print("currentPosition",str(self.labyrinth.normed_position()))
         print("targetPosition",str(self.targetPosition))
         print("nextInput",str(nextInput))
         self.labyrinth.move_one_hot(nextInput)
 
         GridLabyrinthGUI.animate(self,i)
-        #for self feeding network with real last position
 
-        #for network that is given obstacles
-        #self.inferencer.last_speed=[np.append(self.labyrinth.position,self.obstacles)]
         self.inferencer.last_speed=[[self.labyrinth.position[0],self.labyrinth.position[1]]]
+        #MAYBE
+        # self.inferencer.reset()
 
 
 if __name__ == "__main__":
+    COUNT_TIMESTEPS=1
+    COUNT_OBSTALCE_CONFIGURATIONS=100
+    COUNT_OBSTACLES=30
     COUNT_ITERATIONS=30
-    COUNT_TIMESTEPS=6
-
-    lab= LabyrinthGrid.standardVersion()
-    lab.position=[0,0]
 
     configuration={
         "cell_type":"LSTMCell",
         "num_hidden_units": 32,
         "size_output":2,
-        "size_input":6,
+        "size_grid": 100,
+        "size_input":6+100,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"GridLabyrinth_50_one_hot"
+        "tag":"GridLabyrinth_50_100_30"
     }
 
+    lab=LabyrinthGrid.standardVersion()
+    seed=1
+    lab.setRandomObstacles(COUNT_OBSTACLES,seed)
 
+    obstacle_information=GridLabyrinthSequenceGenerator.obstacleInformation(lab)
 
     path=checkpointDirectory=os.path.dirname(__file__)+"/../../data/checkpoints/"+createConfigurationString(configuration)+".chkpt"
 
-    iModel=inverseModel(configuration)
+    iModel=inverseModelGridLabyrinth(configuration)
     iModel.create_self_feeding(COUNT_TIMESTEPS)
-    iModel.create_last_timestep_optimizer(clip_min=0,clip_max=1)
+    iModel.create_last_timestep_optimizer(0.,1.)
     iModel.restore(path)
 
     anim=None
@@ -64,11 +71,9 @@ if __name__ == "__main__":
 
         if(event is None):
             targetPosition=Vector2f(1,0)
-        else:
-            targetPosition=Vector2f(int(event.xdata),int(event.ydata))
-
-        #TODO check if this is necessary
-        #gui.inferencer.reset()
+        targetPosition=Vector2f(1.,1.)
+        #else:
+            #targetPosition=Vector2f(int(event.xdata)/lab.columns,int(event.ydata)/lab.rows)
 
         gui.targetPosition=targetPosition
         if(not anim is None):
@@ -81,9 +86,7 @@ if __name__ == "__main__":
 
     fig=plt.figure()
 
-    gui=GridLabyrinthInferenceAnimation(lab,Vector2f(0.,1.),iModel,COUNT_ITERATIONS,COUNT_TIMESTEPS)
-    #fig.canvas.mpl_connect('key_press_event', gui.keypress)
-    #fig.canvas.mpl_connect('key_release_event',gui.keyrelease)
+    gui=GridLabyrinthInferenceAnimation(lab,Vector2f(0.,1.),obstacle_information,iModel,COUNT_ITERATIONS,COUNT_TIMESTEPS)
     fig.canvas.mpl_connect('button_press_event',lambda event: resetAnimation(gui,event))
 
     resetAnimation(gui)

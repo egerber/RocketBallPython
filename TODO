@@ -1,29 +1,23 @@
-THINKABOUT
-- how to access forward Model 2
 
-TODO:
-- generate good trainigdata for forward model 2
-- train rocketBall with non zero initial state
-- Generalize the terms (such as speed) in inverse model so it can work with obstacle information and alike
-- change move() procedures to take arrays
-- Generate SequenceData including a variety of labyrinths with a fixed number of obstacles
-- self-feeding mechanism that feeds constant labyrinth information into network
+  TODO:
+  - generate good trainigdata for forward model 2
+  - train rocketBall with non zero initial state
+  - Generalize the terms (such as speed) in inverse model so it can work with obstacle information and alike
+  - change move() procedures to take arrays
 
-DEBUG:
-- Check why generated movement from sequencegenerator2 always moves to the right and down only
+  DEBUG:
+  - Check why generated movement from sequencegenerator2 always moves to the right and down only
 
-TAGESZIEL:
-- richtige Daten für ForwardModel2 generieren
-- ForwardModel2 auf verschiedene Trainingssätze trainieren
-- [Visualize anticipation for LabyrinthGrid Inverse Model]
+  TAGESZIEL:
+  - richtige Daten für ForwardModel2 generieren
+  - ForwardModel2 auf verschiedene Trainingssätze trainieren
+  - [Visualize anticipation for LabyrinthGrid Inverse Model]
 
-TAGESZIEL:
-- extend sequenceGenerator for labyrinth to create random labyrinth configuration and movements in it
-    -> train network on it
-    -> use seed to always generate the same obstacle configurations
-    -> obstacle generator (takes: count_obstacles, seed)
-- concept for self feeding mechanism including static input of obstalce array
-- set speed to one hot vector after the iterations are done
-
-DONE:
-- Change code to work with batchsize
+  TAGESZIEL:
+  concept for self feeding mechanism including static input of obstalce array
+  - set speed to one hot vector after the iterations are done
+  create inve
+  - make everything run
+ - add size grid to configuration
+ - do object orientation for inverse Model, self feeding, etc.
+ - visualize

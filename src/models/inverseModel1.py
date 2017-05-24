@@ -12,6 +12,7 @@ from src.models.helper import *
 class inverseModel:
 
     def __init__(self,configuration):
+        #TODO check if this call is necessary
         forwardModel.__init__(self,configuration)
         self.epsilon=10**(-8)
         self.learning_rate=0.01
@@ -170,7 +171,6 @@ class inverseModel:
                 final_outputs.append(_speed)
                 (self.next_c,self.next_h)=state
 
-                #TODO when training labyrinth with obstacle information,append the array of obstacles here
                 self.next_speed=_speed
 
             with vs.variable_scope("LSTM",reuse=True) as lstm_scope:
