@@ -12,19 +12,19 @@ class LabyrinthGrid:
         self.columns=columns
 
     @staticmethod
-    def standardVersion():
+    def standardVersion(count_obstacles=30,seed=1):
         lab=LabyrinthGrid(10,10)
-        lab.setRandomObstacles(5,100)
+        lab.setRandomObstacles(count_obstacles,seed)
         lab.placeRandomPosition()
         return lab
 
     def setRandomObstacles(self,count_obstacles,seed=100):
         self.obstacle=np.zeros((self.rows,self.columns),dtype=np.bool) #holds list of [i,j] refering to row i and column j
-        np.random.seed(seed)
+        r = np.random.RandomState(seed)
 
         count_fields=self.rows*self.columns
 
-        indices=[divmod(index,self.rows) for index in np.random.choice(range(count_fields),count_obstacles,replace=False)]
+        indices=[divmod(index,self.rows) for index in r.choice(range(count_fields),count_obstacles,replace=False)]
 
 
         for i in indices:
@@ -87,10 +87,9 @@ class LabyrinthGrid:
         else:
             return False
 
+    #takes only values € [-1,0,1]
     def move(self,dxy):
-        dx,dy=dxy
-        delta_x=LabyrinthGrid.convert_motorInputs(dx)
-        delta_y=LabyrinthGrid.convert_motorInputs(dy)
+        delta_x,delta_y=dxy
 
         #check for boundaries
         #check within bounds

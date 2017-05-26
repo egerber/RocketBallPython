@@ -43,7 +43,7 @@ class GridLabyrinthGUI:
         for i in range(labyrinth.rows):
             for j in range(labyrinth.columns):
                 if(labyrinth.obstacle[i][j]):
-                    print(str(i),str(j),str(1),str(1))
+
                     obstacle=Rectangle(xy=(i,j),width=1,
                                        height=1)
                     obstacle.set_facecolor((0.9,0.9,0.9))
@@ -70,19 +70,19 @@ class GridLabyrinthGUI:
 
     def keypress(self,event):
         if(event.key=="left"):
-            self.labyrinth.move([-1,0])
+            self.labyrinth.move_one_hot([1,0,0,0])
         elif(event.key=="right"):
-            self.labyrinth.move([1,0])
+            self.labyrinth.move_one_hot([0,1,0,0])
         elif(event.key=="up"):
-            self.labyrinth.move([0,1])
+            self.labyrinth.move_one_hot([0,0,1,0])
         elif(event.key=="down"):
-            self.labyrinth.move([0,-1])
+            self.labyrinth.move_one_hot([0,0,0,1])
 
 
 
 if __name__ == "__main__":
-    lab=LabyrinthGrid.standardVersion()
-    lab.setRandomObstacles(30,3)
+    lab=LabyrinthGrid.standardVersion(30,1)
+
     fig=plt.figure()
     gui=GridLabyrinthGUI(lab)
 

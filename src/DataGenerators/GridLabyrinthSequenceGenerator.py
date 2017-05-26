@@ -22,6 +22,7 @@ class GridLabyrinthSequenceGenerator:
         inputs=np.empty(shape=(count_timesteps,len(obstacle_info)+6))
         inputs[:,:6]=GridLabyrinthSequenceGenerator.generateInputs_one_hot(labyrinth,count_timesteps)
         inputs[:,6:]=obstacle_info
+
         return inputs
     @staticmethod
     def generateInputs_one_hot(labyrinth,count_timesteps):
@@ -74,8 +75,7 @@ class GridLabyrinthSequenceGenerator:
 if __name__=='__main__':
     lab=LabyrinthGrid.standardVersion()
 
-    inputs=GridLabyrinthSequenceGenerator.generateInputs_one_hot_obstacles(lab,10,5,101)
+    inputs=GridLabyrinthSequenceGenerator.generateInputs_one_hot(lab,10)
     outputs=GridLabyrinthSequenceGenerator.generateOutputs_one_hot(lab,inputs)
-    print(lab.obstacle)
-    print(inputs,outputs)
-    #print(inputs)
+    for i,j in zip(inputs,outputs):
+        print(i,j)

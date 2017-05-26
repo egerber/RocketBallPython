@@ -2,22 +2,18 @@
   TODO:
   - generate good trainigdata for forward model 2
   - train rocketBall with non zero initial state
-  - Generalize the terms (such as speed) in inverse model so it can work with obstacle information and alike
   - change move() procedures to take arrays
+  - select available configurations from list and create corresponding path automatically
+  - change log strategy of forward Model to save less datapoints
+  - shuffle batches
 
-  DEBUG:
-  - Check why generated movement from sequencegenerator2 always moves to the right and down only
+QUESTION:
+- how to initialize LSTM state when training on LabyrinthGrid?
+- should the parameters for adam be updated?
+- initial state of LSTM should be encoded position (but how is it encoded?)
+- Why is the error displayed in tensorboard always by several magnitudes higher than the error displayed in the commandline after each training cycle
+-> probably the error in the command window is wrong because the results are usually not as good as they should.
 
-  TAGESZIEL:
-  - richtige Daten für ForwardModel2 generieren
-  - ForwardModel2 auf verschiedene Trainingssätze trainieren
-  - [Visualize anticipation for LabyrinthGrid Inverse Model]
+INSIGHTS
+- Batchsize=1 works best
 
-  TAGESZIEL:
-  concept for self feeding mechanism including static input of obstalce array
-  - set speed to one hot vector after the iterations are done
-  create inve
-  - make everything run
- - add size grid to configuration
- - do object orientation for inverse Model, self feeding, etc.
- - visualize
