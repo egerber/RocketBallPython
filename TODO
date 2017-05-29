@@ -5,7 +5,6 @@
   - change move() procedures to take arrays
   - select available configurations from list and create corresponding path automatically
   - change log strategy of forward Model to save less datapoints
-  - shuffle batches
 
 QUESTION:
 - how to initialize LSTM state when training on LabyrinthGrid?
@@ -13,7 +12,13 @@ QUESTION:
 - initial state of LSTM should be encoded position (but how is it encoded?)
 - Why is the error displayed in tensorboard always by several magnitudes higher than the error displayed in the commandline after each training cycle
 -> probably the error in the command window is wrong because the results are usually not as good as they should.
+@Inference: after each cycle set inputs to one_hot?
 
 INSIGHTS
 - Batchsize=1 works best
 
+
+TODO today
+- retrain pretrained model with obstacles
+- vary learning rate
+- vary size lstm

@@ -1,6 +1,6 @@
 
 import time
-
+import random
 import os
 import tensorflow as tf
 from tensorflow.python.ops import variable_scope as vs
@@ -173,6 +173,12 @@ class forwardModel:
         for i in range(count_epochs):
             sum_error=0.
             begin=time.time()#take time before calculating the epoche
+
+            tmp_list_inp_out = list(zip(inputs, outputs))
+            random.shuffle(tmp_list_inp_out)
+
+            inputs, outputs = zip(*tmp_list_inp_out)
+
             for j in range(count_batches):
                 input_=inputs[j*batchsize:(j+1)*batchsize]
                 output_=outputs[j*batchsize:(j+1)*batchsize]

@@ -27,6 +27,8 @@ class GridLabyrinthPredictionAnimation(GridLabyrinthGUI):
         self.robot.set_facecolor((30./255.,120./255.,220./255.))
         self.predicted_robot.set_facecolor((1.,0.,0.))
         self.predictor.reset()
+        startPosition=self.labyrinth.unnormed_position(self.inputs[0][4:6])
+        self.labyrinth.position=startPosition
 
     def drawAll(self):
         GridLabyrinthGUI.drawAll(self)
@@ -44,17 +46,21 @@ class GridLabyrinthPredictionAnimation(GridLabyrinthGUI):
 
 if __name__ == "__main__":
     COUNT_TIMESTEPS=50
-    COUNT_OBSTACLES=30
+    COUNT_EPOCHS=31
+    COUNT_OBSTALCE_CONFIGURATIONS=1
+    COUNT_OBSTACLES=0
+    BATCH_SIZE=32
+    COUNT_TRAININGS_PER_CONFIGURATION=10000
     SEED=1
 
     configuration={
         "cell_type":"LSTMCell",
-        "num_hidden_units": 32,
+        "num_hidden_units": 64,
         "size_output":2,
         "size_input":106,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"GridLabyrinth_50_30_100_32"
+        "tag":"GridLabyrinth(0.001)_"+str(COUNT_TIMESTEPS)+"_"+str(COUNT_TRAININGS_PER_CONFIGURATION)+"_"+str(COUNT_OBSTACLES)+"_"+str(COUNT_OBSTALCE_CONFIGURATIONS)
     }
 
     lab=LabyrinthGrid.standardVersion()
@@ -86,7 +92,7 @@ if __name__ == "__main__":
         anim=animation.FuncAnimation(fig,gui.animate,
                                      init_func=gui.initGraphics,
                                      frames=COUNT_TIMESTEPS-1,
-                                     interval=100)
+                                     interval=200)
         anim._start()
 
     resetAnimation(gui)
