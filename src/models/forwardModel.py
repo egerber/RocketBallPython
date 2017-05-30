@@ -16,7 +16,7 @@ class forwardModel:
     def __init__(self,configuration):
         #learning parameters
         self.epsilon=10**(-8)
-        self.learning_rate=0.001
+        self.learning_rate=0.0001
         self.beta1=0.9
         self.beta2=0.999
 
@@ -203,7 +203,12 @@ class forwardModel:
 
     def init(self):
         t_begin=time.time()
-        sess=tf.Session()
+
+        #only if gpudevice is used
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.2)
+        sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+        #else
+        #sess=tf.Session()
         sess.run(tf.global_variables_initializer())
         self.sess=sess
         t_end=time.time()
@@ -213,19 +218,35 @@ class forwardModel:
         t_begin=time.time()
 
         #1st: initialize all variables (includes optimizer variables)
-        sess=tf.Session()
+        #only if gpudevice is used
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.2)
+        sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+        #else
+        #sess=tf.Session()
         sess.run(tf.global_variables_initializer())
         #2nd: set weights from pretrained model
         #sess=tf.Session()
-        with vs.variable_scope("network",reuse=True) as scope:
-            #with vs.variable_scope("OUTPUT",reuse=True) as scope:
-            self.saver=tf.train.Saver(var_list={"LSTM/w_f_diag": vs.get_variable("LSTM/w_f_diag"),
-                                                "LSTM/w_i_diag": vs.get_variable("LSTM/w_i_diag"),
-                                                "LSTM/w_o_diag": vs.get_variable("LSTM/w_o_diag"),
-                                                "LSTM/biases": vs.get_variable("LSTM/biases"),
-                                                "LSTM/weights": vs.get_variable("LSTM/weights"),
-                                                "OUTPUT/weights_output":vs.get_variable("OUTPUT/weights_output"),
-                                                "OUTPUT/biases_output":vs.get_variable("OUTPUT/biases_output")})
+
+        if(self.version=="singlebatch"):
+            with vs.variable_scope("network",reuse=True) as scope:
+                #with vs.variable_scope("OUTPUT",reuse=True) as scope:
+                self.saver=tf.train.Saver(var_list={"LSTM/w_f_diag": vs.get_variable("LSTM/w_f_diag"),
+                                                    "LSTM/w_i_diag": vs.get_variable("LSTM/w_i_diag"),
+                                                    "LSTM/w_o_diag": vs.get_variable("LSTM/w_o_diag"),
+                                                    "LSTM/biases": vs.get_variable("LSTM/biases"),
+                                                    "LSTM/weights": vs.get_variable("LSTM/weights"),
+                                                    "OUTPUT/weights_output":vs.get_variable("OUTPUT/weights_output"),
+                                                    "OUTPUT/biases_output":vs.get_variable("OUTPUT/biases_output")})
+        elif(self.version=="multibatch"):
+            with vs.variable_scope("network",reuse=True) as scope:
+                #with vs.variable_scope("OUTPUT",reuse=True) as scope:
+                self.saver=tf.train.Saver(var_list={"LSTM/w_f_diag": vs.get_variable("LSTM/lstm_cell/w_f_diag"),
+                                                    "LSTM/w_i_diag": vs.get_variable("LSTM/lstm_cell/w_i_diag"),
+                                                    "LSTM/w_o_diag": vs.get_variable("LSTM/lstm_cell/w_o_diag"),
+                                                    "LSTM/biases": vs.get_variable("LSTM/lstm_cell/biases"),
+                                                    "LSTM/weights": vs.get_variable("LSTM/lstm_cell/weights"),
+                                                    "OUTPUT/weights_output":vs.get_variable("OUTPUT/weights_output"),
+                                                    "OUTPUT/biases_output":vs.get_variable("OUTPUT/biases_output")})
         self.saver.restore(sess,path)
 
         self.sess=sess

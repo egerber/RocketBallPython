@@ -73,7 +73,7 @@ class LabyrinthGrid:
         else:
             return self.position
     @staticmethod
-    def convert_softmax(vector):
+    def convert_one_hot(vector):
         max_index=np.argmax(vector)
         one_hot_vector=np.zeros(4)
         one_hot_vector[max_index]=1
@@ -100,7 +100,7 @@ class LabyrinthGrid:
 
     def move_one_hot(self,vector):
         if(not LabyrinthGrid.is_one_hot(vector)):
-            vector=LabyrinthGrid.convert_softmax(vector)
+            vector=LabyrinthGrid.convert_one_hot(vector)
 
 
         if(vector[0]==1):
@@ -114,10 +114,5 @@ class LabyrinthGrid:
 
 
 if __name__=="__main__":
-    lab=LabyrinthGrid.standardVersion()
-
-    #lab.obstacle[2][:]=True
-    lab.placeRandomPosition()
-    #lab.position=[0,1]
-    lab.setRandomObstacles(24,101)
-    print(lab.obstacle)
+    lab=LabyrinthGrid.standardVersion(30,1)
+    print(lab.convert_one_hot([0.0,1.,0.9,0.2]))

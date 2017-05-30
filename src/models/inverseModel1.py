@@ -11,11 +11,11 @@ from src.models.helper import *
 
 class inverseModel:
 
-    def __init__(self,configuration):
+    def __init__(self,configuration,learning_rate=0.01):
         #TODO check if this call is necessary
         forwardModel.__init__(self,configuration)
         self.epsilon=10**(-8)
-        self.learning_rate=0.01
+        self.learning_rate=learning_rate
         self.beta1=0.9
         self.beta2=0.9
 
@@ -32,7 +32,6 @@ class inverseModel:
         self.h_state=None
         self.speed=None
 
-        ##
         self.count_timesteps=None
 
     def create_last_timestep_optimizer(self,clip_min=0.,clip_max=1.):
@@ -244,7 +243,8 @@ class inverseModel:
         t_begin=time.time()
 
         #1st: initialize all variables (includes optimizer variables)
-        sess=tf.Session()
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.2)
+        sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
         sess.run(tf.global_variables_initializer())
         #2nd: set weights from pretrained model
         #sess=tf.Session()

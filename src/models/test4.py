@@ -1,7 +1,5 @@
-from tensorflow.python.client import device_lib
+import tensorflow as tf
 
-def get_available_gpus():
-    local_device_protos = device_lib.list_local_devices()
-    return [x.name for x in local_device_protos]
 
-get_available_gpus()
+sess=tf.Session()
+print(sess.run(tf.one_hot(tf.argmax(tf.constant([[[0.9,0.1,0.04,0.4],[0.2,0.5,0.1,0.9]]]),2),4)))

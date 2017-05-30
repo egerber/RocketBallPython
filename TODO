@@ -20,5 +20,6 @@ INSIGHTS
 
 TODO today
 - retrain pretrained model with obstacles
-- vary learning rate
-- vary size lstm
+- inverse Model of non-obstacle version
+- try curriculum learned labyrinth (if works do inverse Model)
+- Train gridLabyrinth with noisy motor inputs

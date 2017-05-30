@@ -35,7 +35,9 @@ class GridLabyrinthPredictionAnimation(GridLabyrinthGUI):
         self.predicted_robot.xy=(self.predicted_position[0],self.predicted_position[1])
 
     def animate(self,i):
-        self.labyrinth.move_one_hot(self.inputs[i])
+
+        motor_input=self.inputs[i][:4]
+        self.labyrinth.move_one_hot(motor_input)
         prediction=predictor(self.inputs[i])[0]
         print(self.labyrinth.normed_position(),prediction)
 
@@ -46,7 +48,6 @@ class GridLabyrinthPredictionAnimation(GridLabyrinthGUI):
 
 if __name__ == "__main__":
     COUNT_TIMESTEPS=50
-    COUNT_EPOCHS=31
     COUNT_OBSTALCE_CONFIGURATIONS=1
     COUNT_OBSTACLES=0
     BATCH_SIZE=32
@@ -55,13 +56,15 @@ if __name__ == "__main__":
 
     configuration={
         "cell_type":"LSTMCell",
-        "num_hidden_units": 64,
+        "num_hidden_units": 16,
         "size_output":2,
         "size_input":106,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"GridLabyrinth(0.001)_"+str(COUNT_TIMESTEPS)+"_"+str(COUNT_TRAININGS_PER_CONFIGURATION)+"_"+str(COUNT_OBSTACLES)+"_"+str(COUNT_OBSTALCE_CONFIGURATIONS)
+        "tag":"GridLabyrinth(0.001)_random_"+str(COUNT_TIMESTEPS)+"_"+str(COUNT_TRAININGS_PER_CONFIGURATION)+"_"+str(COUNT_OBSTACLES)+"_"+str(COUNT_OBSTALCE_CONFIGURATIONS)+"_"+str(BATCH_SIZE)
     }
+
+
 
     lab=LabyrinthGrid.standardVersion()
     lab.setRandomObstacles(COUNT_OBSTACLES,SEED)
@@ -81,7 +84,7 @@ if __name__ == "__main__":
         #for 6->2 mapping
         #inputs=GridLabyrinthSequenceGenerator.generateInputs_one_hot(lab,COUNT_TIMESTEPS)
         #for 106->2 mapping
-        inputs=GridLabyrinthSequenceGenerator.generateInputs_one_hot_obstacles(lab,COUNT_TIMESTEPS,COUNT_OBSTACLES,SEED)
+        inputs,_=GridLabyrinthSequenceGenerator.generateTrainingData_random_obstacles(lab,COUNT_TIMESTEPS,COUNT_OBSTACLES,SEED)
 
         gui.predictor.reset()
 
@@ -92,7 +95,7 @@ if __name__ == "__main__":
         anim=animation.FuncAnimation(fig,gui.animate,
                                      init_func=gui.initGraphics,
                                      frames=COUNT_TIMESTEPS-1,
-                                     interval=200)
+                                     interval=500)
         anim._start()
 
     resetAnimation(gui)

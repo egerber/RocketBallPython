@@ -13,11 +13,11 @@ from src.DataGenerators.GridLabyrinthSequenceGenerator import GridLabyrinthSeque
 
 class inverseModelGridLabyrinth(inverseModel):
 
-    def __init__(self,configuration):
+    def __init__(self,configuration,learning_rate=0.03):
         inverseModel.__init__(self,configuration)
         forwardModel.__init__(self,configuration)
         self.epsilon=10**(-8)
-        self.learning_rate=0.03
+        self.learning_rate=learning_rate
         self.beta1=0.9
         self.beta2=0.9
 
@@ -49,6 +49,7 @@ class inverseModelGridLabyrinth(inverseModel):
             _speed=self.speed
             _obstacle_information=self.obstacle_information
             with vs.variable_scope("LSTM") as lstm_scope:
+
                 jointInput=tf.concat([inputData[0],_speed,_obstacle_information],1)
                 lstm_output,state=cell(jointInput,self.last_state,lstm_scope) #use last_state
                 _speed=tf.matmul(lstm_output,output_layer,name="Multiply_lstm_output")+biases_outputs
@@ -72,14 +73,24 @@ class inverseModelGridLabyrinth(inverseModel):
 
     def infer_self_feeding(self,target_outputs,count_iterations,obstacle_information):
 
+        #convert all inputs to one_hot
+        convert_op=self.inputs.assign(tf.one_hot(tf.argmax(self.inputs,2),4))
+        self.sess.run(convert_op)
         for i in range(count_iterations):
+            print("targets",target_outputs)
+            print("speed",self.last_speed)
+
+
             result_c,result_h,result_speed,i,o,r,_,_=self.sess.run([self.next_c,self.next_h,self.next_speed,self.inputs,self.outputs,self.rmse,self.minimizer,self.clipping],
                                                                    feed_dict={self.target:[target_outputs],
                                                                               self.c_state:self.last_c,
                                                                               self.h_state:self.last_h,
                                                                               self.speed:self.last_speed,
                                                                               self.obstacle_information:[obstacle_information]})
-            print(result_speed)
+
+            print("result_speed",result_speed)
+            print("next_inputs",i)
+            print("next_outputs",o)
 
         self.last_c=result_c
         self.last_h=result_h
@@ -89,7 +100,8 @@ class inverseModelGridLabyrinth(inverseModel):
 
     def reset(self):
         init_input_var = tf.initialize_variables([self.inputs])
-        sess=tf.Session()
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.2)
+        sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
         sess.run(init_input_var)
         inverseModel.reset(self)
 
