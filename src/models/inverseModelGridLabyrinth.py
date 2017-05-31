@@ -22,12 +22,18 @@ class inverseModelGridLabyrinth(inverseModel):
         self.beta2=0.9
 
         self.obstacle_information=None
-
+        self.gradients=None
+        #tryout
+        self.convert_one_hot=None
 
     def create_self_feeding(self,count_timesteps):
 
         self.count_timesteps=count_timesteps
+        #representation of cleaned (one-hot) input given to the model
         self.inputs=tf.Variable(tf.random_uniform([1,count_timesteps,4],minval=0.,maxval=1.))
+        #hold the non- one-hot-representation of the vector
+        self.internal_inputs=tf.Variable(tf.random_uniform([1,count_timesteps,4],minval=0.,maxval=1.))
+
         self.target=tf.placeholder(tf.float32,[1,count_timesteps,self.configuration["size_output"]])
 
         self.speed = tf.placeholder(tf.float32,[1,self.configuration["size_output"]])
@@ -36,7 +42,11 @@ class inverseModelGridLabyrinth(inverseModel):
         self.h_state = tf.placeholder(tf.float32,[1,self.configuration["num_hidden_units"]])
         self.last_state=tf.contrib.rnn.LSTMStateTuple(self.c_state, self.h_state)
 
+        #convert all inputs to one_hot vectors
+        self.convert_one_hot=self.inputs.assign(tf.one_hot(tf.argmax(self.internal_inputs,2),4))
         inputData=tf.unstack(tf.transpose(self.inputs,[1,0,2]))
+
+
         lstm_outputs = []
         final_outputs = []
         with vs.variable_scope("inverse/network"):
@@ -74,29 +84,38 @@ class inverseModelGridLabyrinth(inverseModel):
     def infer_self_feeding(self,target_outputs,count_iterations,obstacle_information):
 
         #convert all inputs to one_hot
-        convert_op=self.inputs.assign(tf.one_hot(tf.argmax(self.inputs,2),4))
-        self.sess.run(convert_op)
+        #convert_op=self.inputs.assign(tf.one_hot(tf.argmax(self.inputs,2),4))
+        #self.sess.run(convert_op)
         for i in range(count_iterations):
-            print("targets",target_outputs)
-            print("speed",self.last_speed)
-
-
-            result_c,result_h,result_speed,i,o,r,_,_=self.sess.run([self.next_c,self.next_h,self.next_speed,self.inputs,self.outputs,self.rmse,self.minimizer,self.clipping],
+            _,result_c,result_h,result_speed,i,o,r,grad,_,_=self.sess.run([self.convert_one_hot,self.next_c,self.next_h,self.next_speed,self.inputs,self.outputs,self.rmse,self.gradients,self.gradient_assignment,self.clipping],
                                                                    feed_dict={self.target:[target_outputs],
                                                                               self.c_state:self.last_c,
                                                                               self.h_state:self.last_h,
                                                                               self.speed:self.last_speed,
                                                                               self.obstacle_information:[obstacle_information]})
 
-            print("result_speed",result_speed)
-            print("next_inputs",i)
-            print("next_outputs",o)
-
         self.last_c=result_c
         self.last_h=result_h
         self.last_speed=result_speed
 
         return i[0]
+
+
+    def create_last_timestep_optimizer(self,clip_min=0.,clip_max=1.):
+        last_output=self.outputs[-1]
+        with vs.variable_scope("LossCalculation") as loss:
+            self.rmse=tf.sqrt(tf.square(tf.subtract(self.target,last_output)),name="RMSE")
+            self.mse=tf.multiply(0.5,tf.square(tf.subtract(self.target,last_output)),name="MSE")
+
+            self.optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate,
+                                                    beta1=self.beta1,
+                                                    beta2=self.beta2,
+                                                    epsilon=self.epsilon,name="MSE_OPTIMIZER")
+
+            self.gradients=self.optimizer.compute_gradients(self.mse,var_list=[self.inputs])[0]
+            self.gradient_assignment=self.internal_inputs.assign(tf.subtract(self.internal_inputs,self.gradients[0]))
+
+            self.clipping=self.internal_inputs.assign(tf.clip_by_value(self.internal_inputs, clip_min,clip_max))
 
     def reset(self):
         init_input_var = tf.initialize_variables([self.inputs])

@@ -4,6 +4,7 @@ from matplotlib.patches import Ellipse
 from matplotlib.patches import Rectangle
 from matplotlib import colors
 from src.LabyrinthGrid import *
+from src.DataGenerators.GridLabyrinthSequenceGenerator import GridLabyrinthSequenceGenerator
 
 class GridLabyrinthGUI:
 
@@ -54,9 +55,10 @@ class GridLabyrinthGUI:
         for p in self.patches:
             self.ax.add_patch(p)
 
+        self.inputs,self.outputs=GridLabyrinthSequenceGenerator.generateTrainingData_one_hot_obstacles(labyrinth,100,30,1)
+
 
     def initGraphics(self):
-
         self.robot.set_facecolor((30./255.,120./255.,220./255.))
 
 
@@ -66,6 +68,8 @@ class GridLabyrinthGUI:
         self.robot.xy=(position[0],position[1])
 
     def animate(self,i):
+        self.labyrinth.position=self.labyrinth.unnormed_position(self.outputs[i])
+
         self.drawAll()
 
     def keypress(self,event):
@@ -91,7 +95,7 @@ if __name__ == "__main__":
     anim=animation.FuncAnimation(fig,gui.animate,
                                  init_func=gui.initGraphics,
                                  frames=10000,
-                                 interval=10)
+                                 interval=100)
 
 
     plt.show()

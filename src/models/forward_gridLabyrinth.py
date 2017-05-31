@@ -9,11 +9,11 @@ if __name__=="__main__":
     COUNT_TIMESTEPS=50
     COUNT_EPOCHS=31
     COUNT_OBSTALCE_CONFIGURATIONS=1
-    COUNT_OBSTACLES=0
+    COUNT_OBSTACLES=30
     BATCH_SIZE=32
     COUNT_TRAININGS_PER_CONFIGURATION=10000
 
-    trainingDataPath="../../data/trainingData/GridLabyrinth/random"+str(COUNT_TIMESTEPS)+"_"+str(COUNT_TRAININGS_PER_CONFIGURATION)+"_"+str(COUNT_OBSTACLES)+"_"+str(COUNT_OBSTALCE_CONFIGURATIONS)
+    trainingDataPath="../../data/trainingData/GridLabyrinth/"+str(COUNT_TIMESTEPS)+"_"+str(COUNT_TRAININGS_PER_CONFIGURATION)+"_"+str(COUNT_OBSTACLES)+"_"+str(COUNT_OBSTALCE_CONFIGURATIONS)
     trainingData=JsonHelper.restore(trainingDataPath)
 
     configuration={
@@ -23,7 +23,7 @@ if __name__=="__main__":
         "size_input":106,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"GridLabyrinth(0.001)_random_"+str(50)+"_"+str(10000)+"_"+str(0)+"_"+str(1)+"_"+str(32)
+        "tag":"GridLabyrinth(0.001)_"+str(COUNT_TIMESTEPS)+"_"+str(COUNT_TRAININGS_PER_CONFIGURATION)+"_"+str(COUNT_OBSTACLES)+"_"+str(COUNT_OBSTALCE_CONFIGURATIONS)+"_"+str(BATCH_SIZE)
     }
 
     #curriculum_configuration={

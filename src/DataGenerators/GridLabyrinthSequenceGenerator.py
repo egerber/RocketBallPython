@@ -110,10 +110,9 @@ class GridLabyrinthSequenceGenerator:
     @staticmethod
     def obstacleInformation(labyrinth):
         obstacles=np.zeros(labyrinth.columns*labyrinth.rows)
-        for r in range(labyrinth.rows):
-            for c in range(labyrinth.columns):
-                if(labyrinth.obstacle[r][c]):
-                    obstacles[r*labyrinth.rows+c]=1
+        for i in range(labyrinth.rows*labyrinth.columns):
+            row,col=divmod(i,labyrinth.columns)
+            obstacles[i]=int(labyrinth.obstacle[row][col])
 
         return obstacles
 
@@ -138,20 +137,41 @@ class GridLabyrinthSequenceGenerator:
 
         return outputs
 
+    @staticmethod
+    def testTrainingData_one_hot_obstacles(trainingData):
+        labyrinth=LabyrinthGrid.standardVersion()
+        inputs,outputs=trainingData
+        for i,obstacle in enumerate(inputs[0,6:]):
+            row,col=divmod(i,labyrinth.columns)
+            labyrinth.obstacle[row][col]=bool(obstacle)
+
+        labyrinth.position=labyrinth.unnormed_position(inputs[0,4:6])
+        for index,input in enumerate(inputs):
+            labyrinth.move_one_hot(input[:4])
+            normed_position=labyrinth.normed_position()
+            if(normed_position[0]!=outputs[index][0] or normed_position[1]!=outputs[index][1]):
+                print("Wrong dataset found")
+                print(normed_position,outputs[index])
+
 
 if __name__=='__main__':
     COUNT_TIMESTEPS=50
     COUNT_EPOCHS=31
     COUNT_OBSTALCE_CONFIGURATIONS=1
-    COUNT_OBSTACLES=0
+    COUNT_OBSTACLES=30
     COUNT_TRAININGS_PER_CONFIGURATION=10000
 
-    lab=LabyrinthGrid.standardVersion(COUNT_OBSTACLES,1)
-    seeds=list(range(1,COUNT_OBSTALCE_CONFIGURATIONS+1))
 
-    trainingsData=[GridLabyrinthSequenceGenerator.generateTrainingData_random_obstacles(lab,COUNT_TIMESTEPS,COUNT_OBSTACLES,seed) for seed in seeds for i in range(COUNT_TRAININGS_PER_CONFIGURATION)]
-    inputs=[trainingsSet[0].tolist() for trainingsSet in trainingsData]
-    outputs=[trainingsSet[1].tolist() for trainingsSet in trainingsData]
-    dict={"inputs":inputs,"outputs":outputs}
-    JsonHelper.JsonHelper.save("../../data/trainingData/GridLabyrinth/random"+str(COUNT_TIMESTEPS)+"_"+str(COUNT_TRAININGS_PER_CONFIGURATION)+"_"+str(COUNT_OBSTACLES)+"_"+str(COUNT_OBSTALCE_CONFIGURATIONS),dict)
+
+    lab=LabyrinthGrid.standardVersion(COUNT_OBSTACLES,1)
+
+
+    for i in range(1000):
+        trainingData=GridLabyrinthSequenceGenerator.generateTrainingData_one_hot_obstacles(lab,COUNT_TIMESTEPS,COUNT_OBSTACLES,1)
+        GridLabyrinthSequenceGenerator.testTrainingData_one_hot_obstacles(trainingData)
+    #trainingsData=[GridLabyrinthSequenceGenerator.generateTrainingData_random_obstacles(lab,COUNT_TIMESTEPS,COUNT_OBSTACLES,seed) for seed in seeds for i in range(COUNT_TRAININGS_PER_CONFIGURATION)]
+    #inputs=[trainingsSet[0].tolist() for trainingsSet in trainingsData]
+    #outputs=[trainingsSet[1].tolist() for trainingsSet in trainingsData]
+    #dict={"inputs":inputs,"outputs":outputs}
+    #JsonHelper.JsonHelper.save("../../data/trainingData/GridLabyrinth/"+str(COUNT_TIMESTEPS)+"_"+str(COUNT_TRAININGS_PER_CONFIGURATION)+"_"+str(COUNT_OBSTACLES)+"_"+str(COUNT_OBSTALCE_CONFIGURATIONS),dict)
 

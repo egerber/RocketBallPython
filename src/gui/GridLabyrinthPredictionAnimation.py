@@ -49,7 +49,7 @@ class GridLabyrinthPredictionAnimation(GridLabyrinthGUI):
 if __name__ == "__main__":
     COUNT_TIMESTEPS=50
     COUNT_OBSTALCE_CONFIGURATIONS=1
-    COUNT_OBSTACLES=0
+    COUNT_OBSTACLES=30
     BATCH_SIZE=32
     COUNT_TRAININGS_PER_CONFIGURATION=10000
     SEED=1
@@ -61,7 +61,7 @@ if __name__ == "__main__":
         "size_input":106,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"GridLabyrinth(0.001)_random_"+str(COUNT_TIMESTEPS)+"_"+str(COUNT_TRAININGS_PER_CONFIGURATION)+"_"+str(COUNT_OBSTACLES)+"_"+str(COUNT_OBSTALCE_CONFIGURATIONS)+"_"+str(BATCH_SIZE)
+        "tag":"GridLabyrinth(0.001)_"+str(COUNT_TIMESTEPS)+"_"+str(COUNT_TRAININGS_PER_CONFIGURATION)+"_"+str(COUNT_OBSTACLES)+"_"+str(COUNT_OBSTALCE_CONFIGURATIONS)+"_"+str(BATCH_SIZE)
     }
 
 

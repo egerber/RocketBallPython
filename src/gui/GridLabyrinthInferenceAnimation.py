@@ -39,7 +39,7 @@ if __name__ == "__main__":
     BATCH_SIZE=32
     COUNT_TRAININGS_PER_CONFIGURATION=10000
 
-    COUNT_ITERATIONS=30
+    COUNT_ITERATIONS=1
 
 
     configuration={
@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
     path=checkpointDirectory=os.path.dirname(__file__)+"/../../data/checkpoints/"+createConfigurationString(configuration)+".chkpt"
 
-    iModel=inverseModelGridLabyrinth(configuration,learning_rate=1.)
+    iModel=inverseModelGridLabyrinth(configuration,learning_rate=100.)
     iModel.create_self_feeding(COUNT_TIMESTEPS_INFERENCE)
     iModel.create_last_timestep_optimizer(0.,1.)
     iModel.restore(path)
