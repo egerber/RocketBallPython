@@ -19,7 +19,7 @@ class GridLabyrinthPredictionAnimation(GridLabyrinthGUI):
 
         position=self.labyrinth.position
         self.predicted_position=self.labyrinth.position
-        self.predicted_robot=plt.Rectangle((position[0],position[1]),width=1,height=1)
+        self.predicted_robot=plt.Rectangle((position[0],position[1]),width=1.,height=1.)
 
         self.ax.add_patch(self.predicted_robot)
 
@@ -27,15 +27,14 @@ class GridLabyrinthPredictionAnimation(GridLabyrinthGUI):
         self.robot.set_facecolor((30./255.,120./255.,220./255.))
         self.predicted_robot.set_facecolor((1.,0.,0.))
         self.predictor.reset()
-        startPosition=self.labyrinth.unnormed_position(self.inputs[0][4:6])
-        self.labyrinth.position=startPosition
+
+        self.labyrinth.apply_configuration(self.inputs[0])
 
     def drawAll(self):
         GridLabyrinthGUI.drawAll(self)
         self.predicted_robot.xy=(self.predicted_position[0],self.predicted_position[1])
 
     def animate(self,i):
-
         motor_input=self.inputs[i][:4]
         self.labyrinth.move_one_hot(motor_input)
         prediction=predictor(self.inputs[i])[0]
@@ -49,46 +48,37 @@ class GridLabyrinthPredictionAnimation(GridLabyrinthGUI):
 if __name__ == "__main__":
     COUNT_TIMESTEPS=50
     COUNT_OBSTALCE_CONFIGURATIONS=1
-    COUNT_OBSTACLES=30
+    COUNT_OBSTACLES=0
     BATCH_SIZE=32
-    COUNT_TRAININGS_PER_CONFIGURATION=10000
-    SEED=1
+    COUNT_TRAININGS_PER_CONFIGURATION=2000
+    SEED=2
 
     configuration={
         "cell_type":"LSTMCell",
-        "num_hidden_units": 16,
+        "num_hidden_units": 128,
         "size_output":2,
         "size_input":106,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"GridLabyrinth(0.001)_"+str(COUNT_TIMESTEPS)+"_"+str(COUNT_TRAININGS_PER_CONFIGURATION)+"_"+str(COUNT_OBSTACLES)+"_"+str(COUNT_OBSTALCE_CONFIGURATIONS)+"_"+str(BATCH_SIZE)
+        "tag":"GridLabyrinth(0.001)_"+str(50)+"_"+str(2000)+"_"+str(30)+"_"+str(10)+"_"+str(32)
     }
 
 
-
-    lab=LabyrinthGrid.standardVersion()
-    lab.setRandomObstacles(COUNT_OBSTACLES,SEED)
     fig=plt.figure()
 
-
+    lab=LabyrinthGrid.standardVersion(COUNT_OBSTACLES,SEED)
     anim=None
-    inputs=None
-
+    inputs,_=GridLabyrinthSequenceGenerator.generateTrainingData_one_hot_obstacles(COUNT_TIMESTEPS,COUNT_OBSTACLES,SEED)
 
     path=os.path.dirname(__file__)+"/../../data/checkpoints/"+createConfigurationString(configuration)+".chkpt"
     predictor=singleStepForwardModel.createFromOld(configuration,path)
     gui=GridLabyrinthPredictionAnimation(lab,inputs,predictor)
     def resetAnimation(gui):
-        global anim,iModel,path
-
-        #for 6->2 mapping
-        #inputs=GridLabyrinthSequenceGenerator.generateInputs_one_hot(lab,COUNT_TIMESTEPS)
-        #for 106->2 mapping
-        inputs,_=GridLabyrinthSequenceGenerator.generateTrainingData_random_obstacles(lab,COUNT_TIMESTEPS,COUNT_OBSTACLES,SEED)
+        global anim,iModel,path,inputs
 
         gui.predictor.reset()
 
-        gui.inputs=inputs
+        #gui.inputs=inputs
 
         if(not anim is None):
             anim._stop()

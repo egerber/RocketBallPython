@@ -58,11 +58,21 @@ class LabyrinthGrid:
         else:
             return int(0)
 
+    def apply_configuration(self,inputs):
+        initial_position=self.unnormed_position(inputs[4:6])
+        self.position=initial_position
+
+        obstacle_information=inputs[6:]
+        self.obstacle=np.zeros((self.columns,self.rows))
+        for i in range(len(obstacle_information)):
+            row,col=divmod(i,self.columns)
+            self.obstacle[row][col]=bool(obstacle_information[i])
+
 
     def unnormed_position(self,normed_position):
         factor_x=(self.columns-1)
         factor_y=(self.rows-1)
-        return [normed_position[0]*factor_x,normed_position[1]*factor_y]
+        return [round(normed_position[0]*factor_x),round(normed_position[1]*factor_y)]
 
 
     def normed_position(self):

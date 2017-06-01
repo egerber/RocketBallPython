@@ -40,10 +40,8 @@ class GridLabyrinthSequenceGenerator:
         return [inputs,outputs]
 
     @staticmethod
-    def generateTrainingData_one_hot_obstacles(labyrinth,count_timesteps,count_obstacles,seed):
-        labyrinth.placeRandomPosition()
-        labyrinth.setRandomObstacles(count_obstacles,seed)
-
+    def generateTrainingData_one_hot_obstacles(count_timesteps,count_obstacles,seed):
+        labyrinth=LabyrinthGrid.standardVersion(count_obstacles,seed)
         obstacle_info=GridLabyrinthSequenceGenerator.obstacleInformation(labyrinth)
         inputs=np.zeros(shape=(count_timesteps,106))
         inputs[:,6:]=obstacle_info
@@ -82,8 +80,9 @@ class GridLabyrinthSequenceGenerator:
 
         return inputs,outputs
     @staticmethod
-    def generateInputs_one_hot_obstacles(labyrinth,count_timesteps,count_obstacles,seed):
-        labyrinth.setRandomObstacles(count_obstacles,seed)
+    def generateInputs_one_hot_obstacles(count_timesteps,count_obstacles,seed):
+        labyrinth=LabyrinthGrid.standardVersion(COUNT_OBSTACLES,seed)
+
         obstacle_info=GridLabyrinthSequenceGenerator.obstacleInformation(labyrinth)
         inputs=np.empty(shape=(count_timesteps,len(obstacle_info)+6))
         inputs[:,:6]=GridLabyrinthSequenceGenerator.generateInputs_one_hot(labyrinth,count_timesteps)
@@ -139,7 +138,7 @@ class GridLabyrinthSequenceGenerator:
 
     @staticmethod
     def testTrainingData_one_hot_obstacles(trainingData):
-        labyrinth=LabyrinthGrid.standardVersion()
+        labyrinth=LabyrinthGrid.standardVersion(0,1)
         inputs,outputs=trainingData
         for i,obstacle in enumerate(inputs[0,6:]):
             row,col=divmod(i,labyrinth.columns)
@@ -147,28 +146,28 @@ class GridLabyrinthSequenceGenerator:
 
         labyrinth.position=labyrinth.unnormed_position(inputs[0,4:6])
         for index,input in enumerate(inputs):
+            position_before=labyrinth.position
+            output=outputs[index]
             labyrinth.move_one_hot(input[:4])
             normed_position=labyrinth.normed_position()
-            if(normed_position[0]!=outputs[index][0] or normed_position[1]!=outputs[index][1]):
+            if(normed_position[0]!=output[0] or normed_position[1]!=output[1]):
                 print("Wrong dataset found")
                 print(normed_position,outputs[index])
+                position_after=labyrinth.position
 
 
 if __name__=='__main__':
     COUNT_TIMESTEPS=50
     COUNT_EPOCHS=31
-    COUNT_OBSTALCE_CONFIGURATIONS=1
+    COUNT_OBSTALCE_CONFIGURATIONS=10
     COUNT_OBSTACLES=30
-    COUNT_TRAININGS_PER_CONFIGURATION=10000
+    COUNT_TRAININGS_PER_CONFIGURATION=2000
 
 
 
     lab=LabyrinthGrid.standardVersion(COUNT_OBSTACLES,1)
 
 
-    for i in range(1000):
-        trainingData=GridLabyrinthSequenceGenerator.generateTrainingData_one_hot_obstacles(lab,COUNT_TIMESTEPS,COUNT_OBSTACLES,1)
-        GridLabyrinthSequenceGenerator.testTrainingData_one_hot_obstacles(trainingData)
     #trainingsData=[GridLabyrinthSequenceGenerator.generateTrainingData_random_obstacles(lab,COUNT_TIMESTEPS,COUNT_OBSTACLES,seed) for seed in seeds for i in range(COUNT_TRAININGS_PER_CONFIGURATION)]
     #inputs=[trainingsSet[0].tolist() for trainingsSet in trainingsData]
     #outputs=[trainingsSet[1].tolist() for trainingsSet in trainingsData]

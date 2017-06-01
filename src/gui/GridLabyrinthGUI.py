@@ -55,8 +55,6 @@ class GridLabyrinthGUI:
         for p in self.patches:
             self.ax.add_patch(p)
 
-        self.inputs,self.outputs=GridLabyrinthSequenceGenerator.generateTrainingData_one_hot_obstacles(labyrinth,100,30,1)
-
 
     def initGraphics(self):
         self.robot.set_facecolor((30./255.,120./255.,220./255.))
@@ -64,12 +62,9 @@ class GridLabyrinthGUI:
 
     def drawAll(self):
         position=self.labyrinth.position
-
         self.robot.xy=(position[0],position[1])
 
     def animate(self,i):
-        self.labyrinth.position=self.labyrinth.unnormed_position(self.outputs[i])
-
         self.drawAll()
 
     def keypress(self,event):

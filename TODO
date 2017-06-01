@@ -19,7 +19,8 @@ INSIGHTS
 
 
 TODO today
-- retrain pretrained model with obstacles
-- inverse Model of non-obstacle version
-- try curriculum learned labyrinth (if works do inverse Model)
-- Train gridLabyrinth with noisy motor inputs
+- train (128) network with one configurations (try seed 1 and 2)
+- train (16,128) network on larger training data (10.000 per configuration)
+-> use extremely small and extremely large learning rate
+- train smaller network (5x5)
+
