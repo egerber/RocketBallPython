@@ -18,6 +18,13 @@ class LabyrinthGrid:
         lab.placeRandomPosition()
         return lab
 
+    @staticmethod
+    def smallVersion(count_obstacles=9,seed=1):
+        lab=LabyrinthGrid(5,5)
+        lab.setRandomObstacles(count_obstacles,seed)
+        lab.placeRandomPosition()
+        return lab
+
     def setRandomObstacles(self,count_obstacles,seed=100):
         self.obstacle=np.zeros((self.rows,self.columns),dtype=np.bool) #holds list of [i,j] refering to row i and column j
         r = np.random.RandomState(seed)
@@ -69,11 +76,15 @@ class LabyrinthGrid:
             self.obstacle[row][col]=bool(obstacle_information[i])
 
 
-    def unnormed_position(self,normed_position):
+    def unnormed_position(self,normed_position,round_discrete=False):
         factor_x=(self.columns-1)
         factor_y=(self.rows-1)
-        return [round(normed_position[0]*factor_x),round(normed_position[1]*factor_y)]
 
+        #round to discrete values
+        if(round_discrete):
+            return [round(normed_position[0]*factor_x),round(normed_position[1]*factor_y)]
+        else:
+            return [normed_position[0]*factor_x,normed_position[1]*factor_y]
 
     def normed_position(self):
         if(self.columns>1 and self.rows>1):

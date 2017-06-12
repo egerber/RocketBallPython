@@ -13,10 +13,10 @@ from src.models.helper import *
 class forwardModel:
 
 
-    def __init__(self,configuration):
+    def __init__(self,configuration,learning_rate=0.001):
         #learning parameters
         self.epsilon=10**(-8)
-        self.learning_rate=0.0001
+        self.learning_rate=learning_rate
         self.beta1=0.9
         self.beta2=0.999
 

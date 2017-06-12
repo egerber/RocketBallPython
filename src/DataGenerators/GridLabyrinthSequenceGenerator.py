@@ -24,7 +24,7 @@ class GridLabyrinthSequenceGenerator:
         labyrinth.setRandomObstacles(count_obstacles,seed)
 
         obstacle_info=GridLabyrinthSequenceGenerator.obstacleInformation(labyrinth)
-        inputs=np.random.rand(count_timesteps,106)
+        inputs=np.random.rand(count_timesteps,4+2+labyrinth.columns*labyrinth.rows)
 
         inputs[:,6:]=obstacle_info
 
@@ -40,10 +40,13 @@ class GridLabyrinthSequenceGenerator:
         return [inputs,outputs]
 
     @staticmethod
-    def generateTrainingData_one_hot_obstacles(count_timesteps,count_obstacles,seed):
-        labyrinth=LabyrinthGrid.standardVersion(count_obstacles,seed)
+    def generateTrainingData_one_hot_obstacles(rows,columns,count_timesteps,count_obstacles,seed):
+        labyrinth=LabyrinthGrid(rows,columns)
+        labyrinth.setRandomObstacles(count_obstacles,seed)
+        labyrinth.placeRandomPosition()
+
         obstacle_info=GridLabyrinthSequenceGenerator.obstacleInformation(labyrinth)
-        inputs=np.zeros(shape=(count_timesteps,106))
+        inputs=np.zeros((count_timesteps,4+2+labyrinth.columns*labyrinth.rows))
         inputs[:,6:]=obstacle_info
         rand_indices_one=np.random.randint(low=0,high=4,size=(count_timesteps))
         for i in range(count_timesteps):
@@ -79,32 +82,6 @@ class GridLabyrinthSequenceGenerator:
             outputs[i,:]=labyrinth.normed_position()
 
         return inputs,outputs
-    @staticmethod
-    def generateInputs_one_hot_obstacles(count_timesteps,count_obstacles,seed):
-        labyrinth=LabyrinthGrid.standardVersion(COUNT_OBSTACLES,seed)
-
-        obstacle_info=GridLabyrinthSequenceGenerator.obstacleInformation(labyrinth)
-        inputs=np.empty(shape=(count_timesteps,len(obstacle_info)+6))
-        inputs[:,:6]=GridLabyrinthSequenceGenerator.generateInputs_one_hot(labyrinth,count_timesteps)
-        inputs[:,6:]=obstacle_info
-
-        return inputs
-    @staticmethod
-    def generateInputs_one_hot(labyrinth,count_timesteps):
-        labyrinth.placeRandomPosition()
-        inputs=np.zeros(shape=(count_timesteps,6))
-
-        rand_indices_one=np.random.randint(low=0,high=4,size=(count_timesteps))
-        for i in range(count_timesteps):
-            inputs[i,rand_indices_one[i]]=1
-
-        inputs[0][4:6]=labyrinth.normed_position()
-        labyrinth.move_one_hot(inputs[0,:4])
-        for i in range(1,count_timesteps):
-            inputs[i][4:6]=labyrinth.normed_position()
-            labyrinth.move_one_hot(inputs[i,:4])
-
-        return inputs
 
     @staticmethod
     def obstacleInformation(labyrinth):
@@ -114,27 +91,6 @@ class GridLabyrinthSequenceGenerator:
             obstacles[i]=int(labyrinth.obstacle[row][col])
 
         return obstacles
-
-    @staticmethod
-    def generateOutputs_one_hot(labyrinth,inputs):
-        labyrinth.position=labyrinth.unnormed_position(inputs[0][4:6])
-
-        outputs=np.zeros((len(inputs),2))
-        for i in range(len(inputs)):
-            labyrinth.move_one_hot(inputs[i][:4])
-            outputs[i][0:2]=labyrinth.normed_position()
-
-        return outputs
-
-    @staticmethod
-    def generateOutputs(labyrinth,inputs):
-        labyrinth.position=labyrinth.unnormed_position(inputs[0][2:4])
-        outputs=np.zeros((len(inputs),2))
-        for i in range(len(inputs)):
-            labyrinth.move(inputs[i][0],inputs[i][1])
-            outputs[i][0:2]=labyrinth.normed_position()
-
-        return outputs
 
     @staticmethod
     def testTrainingData_one_hot_obstacles(trainingData):
@@ -158,19 +114,28 @@ class GridLabyrinthSequenceGenerator:
 
 if __name__=='__main__':
     COUNT_TIMESTEPS=50
-    COUNT_EPOCHS=31
-    COUNT_OBSTALCE_CONFIGURATIONS=10
-    COUNT_OBSTACLES=30
-    COUNT_TRAININGS_PER_CONFIGURATION=2000
+    COUNT_OBSTALCE_CONFIGURATIONS=1
+    COUNT_TRAININGS_PER_CONFIGURATION=10000
+    COUNT_OBSTACLES=7
+
+    MIN_OBSTACLES=7
+    MAX_OBSTACLES=8
+
+    obstacle_configurations=np.random.randint(MIN_OBSTACLES,MAX_OBSTACLES,COUNT_OBSTALCE_CONFIGURATIONS)
+    #obstacle_configurations=np.ones(COUNT_OBSTALCE_CONFIGURATIONS)
+    seed_configurations=np.random.randint(0,100000,COUNT_OBSTALCE_CONFIGURATIONS)
+
+    #seeds=list(range(1,COUNT_OBSTALCE_CONFIGURATIONS+1))
 
 
 
-    lab=LabyrinthGrid.standardVersion(COUNT_OBSTACLES,1)
+    #trainingsData=[GridLabyrinthSequenceGenerator.generateTrainingData_one_hot_obstacles(lab,COUNT_TIMESTEPS,COUNT_OBSTACLES,seed) for seed in seeds for i in range(COUNT_TRAININGS_PER_CONFIGURATION)]
+    trainingsData=[GridLabyrinthSequenceGenerator.generateTrainingData_one_hot_obstacles(5,5,50,o,i) for c in range(COUNT_TRAININGS_PER_CONFIGURATION) for o,i in zip(obstacle_configurations,seed_configurations)]
 
+    inputs=[trainingsSet[0].tolist() for trainingsSet in trainingsData]
+    outputs=[trainingsSet[1].tolist() for trainingsSet in trainingsData]
 
-    #trainingsData=[GridLabyrinthSequenceGenerator.generateTrainingData_random_obstacles(lab,COUNT_TIMESTEPS,COUNT_OBSTACLES,seed) for seed in seeds for i in range(COUNT_TRAININGS_PER_CONFIGURATION)]
-    #inputs=[trainingsSet[0].tolist() for trainingsSet in trainingsData]
-    #outputs=[trainingsSet[1].tolist() for trainingsSet in trainingsData]
-    #dict={"inputs":inputs,"outputs":outputs}
-    #JsonHelper.JsonHelper.save("../../data/trainingData/GridLabyrinth/"+str(COUNT_TIMESTEPS)+"_"+str(COUNT_TRAININGS_PER_CONFIGURATION)+"_"+str(COUNT_OBSTACLES)+"_"+str(COUNT_OBSTALCE_CONFIGURATIONS),dict)
+    dict={"inputs":inputs,"outputs":outputs}
+    #JsonHelper.JsonHelper.save("../../data/trainingData/GridLabyrinthSmall/"+str(COUNT_TIMESTEPS)+"_"+str(COUNT_TRAININGS_PER_CONFIGURATION)+"_"+str(COUNT_OBSTACLES)+"_"+str(COUNT_OBSTALCE_CONFIGURATIONS),dict)
+    JsonHelper.JsonHelper.save("../../data/trainingData/GridLabyrinthSmall/single_"+str(COUNT_TIMESTEPS)+"_"+str(COUNT_TRAININGS_PER_CONFIGURATION)+"_" +str(COUNT_OBSTALCE_CONFIGURATIONS),dict)
 

@@ -80,7 +80,7 @@ class GridLabyrinthGUI:
 
 
 if __name__ == "__main__":
-    lab=LabyrinthGrid.standardVersion(30,1)
+    lab=LabyrinthGrid.smallVersion(8,15)
 
     fig=plt.figure()
     gui=GridLabyrinthGUI(lab)

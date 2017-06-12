@@ -7,20 +7,38 @@
   - change log strategy of forward Model to save less datapoints
 
 QUESTION:
-- how to initialize LSTM state when training on LabyrinthGrid?
-- should the parameters for adam be updated?
-- initial state of LSTM should be encoded position (but how is it encoded?)
 - Why is the error displayed in tensorboard always by several magnitudes higher than the error displayed in the commandline after each training cycle
 -> probably the error in the command window is wrong because the results are usually not as good as they should.
-@Inference: after each cycle set inputs to one_hot?
+
+
+QUESTIONS:
+- why is the plotted error so low but the performance so bad?
+
+INSIGHTS:
+- in some configurations, particular obstacles are not seen when coming from a particular position. This is probably because in the training data there are few cases for this exact movement.
+-> try with less obstacles
+
 
 INSIGHTS
 - Batchsize=1 works best
+- learningrate 0.0001 and 0.001 does not work well
+- learningrate 0.01 works best
+- best configuration: learning on various obstacle configur
+- If fixed size of obstacle is trained, change in number of obstacles results in shifted predictions
+
+Vorschlag Herr Butz:
+-> zuerst Dikstra Pfadalgorithmus, danach im lokalen Umfeld minimieren
+
+How to structure BA?
+-> Introduction to NN
+    -> LSTMs and formulas
+-> rocketBall scenario
+-> previous attempts
+-> hierarchical approach
 
 
-TODO today
-- train (128) network with one configurations (try seed 1 and 2)
-- train (16,128) network on larger training data (10.000 per configuration)
--> use extremely small and extremely large learning rate
-- train smaller network (5x5)
-
+TOOD heute:
+- Multilayer RNNs for various maps
+- mapping to absolute position + sensory data
+-> single layer
+-> multi layer
