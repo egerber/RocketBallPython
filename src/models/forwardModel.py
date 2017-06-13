@@ -56,6 +56,34 @@ class forwardModel:
         tf.summary.scalar(name+"/Max",max)
         tf.summary.scalar(name+"/Std",std)
 
+    def create_multiLayerRNN(self,count_layers,count_timesteps,device='/cpu:0'):
+        self.version="multilayerbatch"
+        with tf.device(device):
+            self.data=tf.placeholder(tf.float32,[None,count_timesteps,self.configuration["size_input"]])
+            self.target=tf.placeholder(tf.float32,[None,count_timesteps,self.configuration["size_output"]])
+
+            with vs.variable_scope("network"):
+                with vs.variable_scope("LSTM") as lstm_scope:
+
+                    stacked_lstm = tf.contrib.rnn.MultiRNNCell([tf.contrib.rnn.LSTMCell(num_units=self.configuration["num_hidden_units"],use_peepholes=self.configuration["use_peepholes"],state_is_tuple=True) for _ in range(count_layers)],
+                                                               state_is_tuple=True)
+
+                    lstm_outputs,state=tf.nn.dynamic_rnn(stacked_lstm,self.data,dtype=tf.float32,scope=lstm_scope)
+                    lstm_outputs=tf.unstack(tf.transpose(lstm_outputs,[1,0,2]))
+                with vs.variable_scope("OUTPUT"):
+                    output_layer=vs.get_variable("weights_output",
+                                                 [self.configuration["num_hidden_units"],self.configuration["size_output"]],
+                                                 initializer=tf.random_normal_initializer())
+                    if(self.configuration["use_biases"]):
+                        biases_outputs=vs.get_variable("biases_output",[1,self.configuration["size_output"]],
+                                                       initializer=tf.random_normal_initializer())
+                        outputs=[tf.matmul(out_t,output_layer,name="Multiply_lstm_output")+biases_outputs for out_t in lstm_outputs]
+                    else:
+                        outputs=[tf.matmul(out_t,output_layer,name="Multiply_lstm_output") for out_t in lstm_outputs]
+
+                    outputs=tf.transpose(outputs,[1,0,2],"Transpose_output")
+            self.outputs=outputs
+
     def create_dynamicRNN(self,count_timesteps,device='/cpu_0'):
         self.version="multibatch"
         with tf.device(device):
@@ -64,8 +92,6 @@ class forwardModel:
 
 
             with vs.variable_scope("network"):
-
-                inputData=tf.unstack(tf.transpose(self.data,[1,0,2]))
 
                 with vs.variable_scope("LSTM") as lstm_scope:
                     cell=tf.contrib.rnn.LSTMCell(num_units=self.configuration["num_hidden_units"],use_peepholes=self.configuration["use_peepholes"],state_is_tuple=True)
@@ -204,6 +230,7 @@ class forwardModel:
     def init(self):
         t_begin=time.time()
 
+
         #only if gpudevice is used
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.2)
         sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
@@ -211,6 +238,12 @@ class forwardModel:
         #sess=tf.Session()
         sess.run(tf.global_variables_initializer())
         self.sess=sess
+
+        tvars = tf.trainable_variables()
+        tvars_vals = self.sess.run(tvars)
+
+        for var, val in zip(tvars, tvars_vals):
+            print(var.name)  # Prints the name of the variable alongside its value.
         t_end=time.time()
         print("Initialization Done! (time: " + str(t_end-t_begin) +")")
 
@@ -221,9 +254,15 @@ class forwardModel:
         #only if gpudevice is used
         gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.2)
         sess = tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+
+
         #else
         #sess=tf.Session()
         sess.run(tf.global_variables_initializer())
+        tvars = tf.trainable_variables()
+        tvars_vals = sess.run(tvars)
+        for var, val in zip(tvars, tvars_vals):
+            print(var.name)  # Prints the name of the variable alongside its value.
         #2nd: set weights from pretrained model
         #sess=tf.Session()
 
@@ -246,6 +285,22 @@ class forwardModel:
                                                     "LSTM/biases": vs.get_variable("LSTM/lstm_cell/biases"),
                                                     "LSTM/weights": vs.get_variable("LSTM/lstm_cell/weights"),
                                                     "OUTPUT/weights_output":vs.get_variable("OUTPUT/weights_output"),
+                                                    "OUTPUT/biases_output":vs.get_variable("OUTPUT/biases_output")})
+
+        elif(self.version=="multilayerbatch"):
+            with vs.variable_scope("network",reuse=True) as scope:
+                #with vs.variable_scope("OUTPUT",reuse=True) as scope:
+                self.saver=tf.train.Saver(var_list={"LSTM/multi_rnn_cell/cell_0/lstm_cell/weights":vs.get_variable("LSTM/multi_rnn_cell/cell_0/lstm_cell/weights"),
+                                                    "LSTM/multi_rnn_cell/cell_0/lstm_cell/biases":vs.get_variable("LSTM/multi_rnn_cell/cell_0/lstm_cell/biases"),
+                                                    "LSTM/multi_rnn_cell/cell_0/lstm_cell/w_f_diag":vs.get_variable("LSTM/multi_rnn_cell/cell_0/lstm_cell/w_f_diag"),
+                                                    "LSTM/multi_rnn_cell/cell_0/lstm_cell/w_i_diag":vs.get_variable("LSTM/multi_rnn_cell/cell_0/lstm_cell/w_i_diag"),
+                                                    "LSTM/multi_rnn_cell/cell_0/lstm_cell/w_o_diag":vs.get_variable("LSTM/multi_rnn_cell/cell_0/lstm_cell/w_o_diag"),
+                                                    "LSTM/multi_rnn_cell/cell_1/lstm_cell/weights":vs.get_variable("LSTM/multi_rnn_cell/cell_1/lstm_cell/weights"),
+                                                    "LSTM/multi_rnn_cell/cell_1/lstm_cell/biases": vs.get_variable("LSTM/multi_rnn_cell/cell_1/lstm_cell/biases"),
+                                                    "LSTM/multi_rnn_cell/cell_1/lstm_cell/w_f_diag":vs.get_variable("LSTM/multi_rnn_cell/cell_1/lstm_cell/w_f_diag"),
+                                                    "LSTM/multi_rnn_cell/cell_1/lstm_cell/w_i_diag":vs.get_variable("LSTM/multi_rnn_cell/cell_1/lstm_cell/w_i_diag"),
+                                                    "LSTM/multi_rnn_cell/cell_1/lstm_cell/w_o_diag":vs.get_variable("LSTM/multi_rnn_cell/cell_1/lstm_cell/w_o_diag"),
+                                                    "OUTPUT/weights_output": vs.get_variable("OUTPUT/weights_output"),
                                                     "OUTPUT/biases_output":vs.get_variable("OUTPUT/biases_output")})
         self.saver.restore(sess,path)
 
@@ -272,7 +327,21 @@ class forwardModel:
                                                         "LSTM/weights": vs.get_variable("LSTM/lstm_cell/weights"),
                                                         "OUTPUT/weights_output":vs.get_variable("OUTPUT/weights_output"),
                                                         "OUTPUT/biases_output":vs.get_variable("OUTPUT/biases_output")})
-
+            elif(self.version=="multilayerbatch"):
+                with vs.variable_scope("network",reuse=True) as scope:
+                    #with vs.variable_scope("OUTPUT",reuse=True) as scope:
+                    self.saver=tf.train.Saver(var_list={"LSTM/multi_rnn_cell/cell_0/lstm_cell/weights":vs.get_variable("LSTM/multi_rnn_cell/cell_0/lstm_cell/weights"),
+                                                        "LSTM/multi_rnn_cell/cell_0/lstm_cell/biases":vs.get_variable("LSTM/multi_rnn_cell/cell_0/lstm_cell/biases"),
+                                                        "LSTM/multi_rnn_cell/cell_0/lstm_cell/w_f_diag":vs.get_variable("LSTM/multi_rnn_cell/cell_0/lstm_cell/w_f_diag"),
+                                                        "LSTM/multi_rnn_cell/cell_0/lstm_cell/w_i_diag":vs.get_variable("LSTM/multi_rnn_cell/cell_0/lstm_cell/w_i_diag"),
+                                                        "LSTM/multi_rnn_cell/cell_0/lstm_cell/w_o_diag":vs.get_variable("LSTM/multi_rnn_cell/cell_0/lstm_cell/w_o_diag"),
+                                                        "LSTM/multi_rnn_cell/cell_1/lstm_cell/weights":vs.get_variable("LSTM/multi_rnn_cell/cell_1/lstm_cell/weights"),
+                                                        "LSTM/multi_rnn_cell/cell_1/lstm_cell/biases": vs.get_variable("LSTM/multi_rnn_cell/cell_1/lstm_cell/biases"),
+                                                        "LSTM/multi_rnn_cell/cell_1/lstm_cell/w_f_diag":vs.get_variable("LSTM/multi_rnn_cell/cell_1/lstm_cell/w_f_diag"),
+                                                        "LSTM/multi_rnn_cell/cell_1/lstm_cell/w_i_diag":vs.get_variable("LSTM/multi_rnn_cell/cell_1/lstm_cell/w_i_diag"),
+                                                        "LSTM/multi_rnn_cell/cell_1/lstm_cell/w_o_diag":vs.get_variable("LSTM/multi_rnn_cell/cell_1/lstm_cell/w_o_diag"),
+                                                        "OUTPUT/weights_output": vs.get_variable("OUTPUT/weights_output"),
+                                                        "OUTPUT/biases_output":vs.get_variable("OUTPUT/biases_output")})
         self.saver.save(self.sess, path)
 
     #runs several inputs and returns outputs

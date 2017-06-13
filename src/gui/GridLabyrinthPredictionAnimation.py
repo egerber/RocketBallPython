@@ -67,7 +67,7 @@ class GridLabyrinthPredictionAnimation(GridLabyrinthGUI):
 
         print(self.dx,self.dy)
 
-        self.predicted_position=self.labyrinth.unnormed_position(prediction,round_discrete=True)
+        self.predicted_position=self.labyrinth.unnormed_position(prediction,round_discrete=False)
         GridLabyrinthGUI.animate(self,i)
 
 
@@ -77,8 +77,8 @@ if __name__ == "__main__":
     COUNT_OBSTALCE_CONFIGURATIONS=100
     COUNT_OBSTACLES=9
     BATCH_SIZE=32
-    COUNT_TRAININGS_PER_CONFIGURATION=1000
-    SEED=20
+    COUNT_TRAININGS_PER_CONFIGURATION=100
+    SEED=23
 
     configuration={
         "cell_type":"LSTMCell",
@@ -87,10 +87,9 @@ if __name__ == "__main__":
         "size_input":31,
         "use_biases":True,
         "use_peepholes":True,
-        "tag":"GridLabyrinth(0.001)"+"_PRETRAINED_50_100_500_32"#str(COUNT_TIMESTEPS)+"_"+str(COUNT_TRAININGS_PER_CONFIGURATION)+"_"+str(COUNT_OBSTACLES)+"_"+str(COUNT_OBSTALCE_CONFIGURATIONS)+"_"+str(BATCH_SIZE)
+        "count_layers":2,
+        "tag":"GridLabyrinthSmall(0.01)_various_multi_500_100"#str(COUNT_TIMESTEPS)+"_"+str(COUNT_TRAININGS_PER_CONFIGURATION)+"_"+str(COUNT_OBSTACLES)+"_"+str(COUNT_OBSTALCE_CONFIGURATIONS)+"_"+str(BATCH_SIZE)
     }
-
-
 
     fig=plt.figure()
 
@@ -113,7 +112,7 @@ if __name__ == "__main__":
         anim=animation.FuncAnimation(fig,gui.animate,
                                      init_func=gui.initGraphics,
                                      frames=COUNT_TIMESTEPS-1,
-                                     interval=200)
+                                     interval=500)
         anim._start()
 
     resetAnimation(gui)

@@ -6,7 +6,7 @@ class LabyrinthGrid:
 
     def __init__(self,rows,columns):
         self.position=[0,0]
-        self.obstacle=np.zeros((rows,columns),dtype=np.bool) #holds list of [i,j] refering to row i and column j
+        self.obstacle=np.zeros((columns,rows),dtype=np.bool) #holds list of [i,j] refering to row i and column j
 
         self.rows=rows
         self.columns=columns
@@ -26,7 +26,7 @@ class LabyrinthGrid:
         return lab
 
     def setRandomObstacles(self,count_obstacles,seed=100):
-        self.obstacle=np.zeros((self.rows,self.columns),dtype=np.bool) #holds list of [i,j] refering to row i and column j
+        self.obstacle=np.zeros((self.columns,self.rows),dtype=np.bool) #holds list of [i,j] refering to row i and column j
         r = np.random.RandomState(seed)
 
         count_fields=self.rows*self.columns
@@ -50,9 +50,6 @@ class LabyrinthGrid:
             else:
                 pass#repeat
 
-    @staticmethod
-    def convert_position(x,y):
-        pass
 
     @staticmethod
     def convert_motorInputs(scalar):
@@ -108,6 +105,20 @@ class LabyrinthGrid:
         else:
             return False
 
+    def sensor_information(self):
+        sensor_information=np.zeros(4)
+        #check for left obstacle
+        if(self.position[0]-1<0 or self.obstacle[self.position[0]-1][self.position[1]]):
+            sensor_information[0]=1
+        if(self.position[0]+1>=self.columns or self.obstacle[self.position[0]+1][self.position[1]]):
+            sensor_information[1]=1
+        if(self.position[1]-1<0 or self.obstacle[self.position[0]][self.position[1]-1]):
+            sensor_information[2]=1
+        if(self.position[1]+1>=self.rows or self.obstacle[self.position[0]][self.position[1]+1]):
+            sensor_information[3]=1
+
+        return sensor_information
+
     #takes only values € [-1,0,1]
     def move(self,dxy):
         delta_x,delta_y=dxy
@@ -135,5 +146,8 @@ class LabyrinthGrid:
 
 
 if __name__=="__main__":
-    lab=LabyrinthGrid.standardVersion(30,1)
-    print(lab.convert_one_hot([0.0,1.,0.9,0.2]))
+    lab=LabyrinthGrid.smallVersion(20,1)
+    print(lab.obstacle)
+    print(lab.position)
+    print(lab.sensor_information())
+    print(lab.obstacle[lab.position[0]][lab.position[1]])

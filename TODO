@@ -38,7 +38,18 @@ How to structure BA?
 
 
 TOOD heute:
-- Multilayer RNNs for various maps
-- mapping to absolute position + sensory data
--> single layer
--> multi layer
+-test trained multilayer lstms
+    -> sensor version
+    -> no sensor version
+- if results are not good enough, try training with different parameters (network size, batchsize,learning_rate,count_timesteps)
+
+
+INSIGHTS
+- training on 500_100_50 works perfekt with 2 layers (16,0.01), maybe less timesteps have to be trained
+- 10000_1 does not work well but 500_100_10
+- maybe less configu
+
+TODO
+-train on 50000_1 and compare with 10000
+- determine whether count_configurations or count_trainings is more important
+- change name of last_speed etc. - last speed -> last_state, last_state-> state

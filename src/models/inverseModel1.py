@@ -26,11 +26,11 @@ class inverseModel:
 
         self.last_c=np.zeros((1,self.configuration["num_hidden_units"]))
         self.last_h=np.zeros((1,self.configuration["num_hidden_units"]))
-        self.last_speed=np.zeros((1,self.configuration["size_output"]))
+        self.last_speed=np.zeros((1, self.configuration["size_output"]))
 
         self.c_state=None
         self.h_state=None
-        self.speed=None
+        self.input=None
 
         self.count_timesteps=None
 
@@ -91,7 +91,7 @@ class inverseModel:
 
         self.c_state = tf.placeholder(tf.float32,[1,self.configuration["num_hidden_units"]])
         self.h_state = tf.placeholder(tf.float32,[1,self.configuration["num_hidden_units"]])
-        self.last_state=tf.contrib.rnn.LSTMStateTuple(self.c_state, self.h_state)
+        self.current_state=tf.contrib.rnn.LSTMStateTuple(self.c_state, self.h_state)
 
         lstm_outputs=[]
         cell=None
@@ -111,7 +111,7 @@ class inverseModel:
             state=None
             with vs.variable_scope("LSTM") as lstm_scope:
                 #initial_state=cell.zero_state(1,tf.float32)
-                lstm_output,state=cell(inputData[0],self.last_state,lstm_scope) #use last_state
+                lstm_output,state=cell(inputData[0], self.current_state, lstm_scope) #use state from last timestep
                 lstm_outputs.append(lstm_output)
                 (self.next_c,self.next_h)=state
             with vs.variable_scope("LSTM",reuse=True) as lstm_scope:
@@ -145,10 +145,10 @@ class inverseModel:
         self.inputs=tf.Variable(tf.random_uniform([1,count_timesteps,self.configuration["size_input"]-self.configuration["size_output"]],minval=0.,maxval=1.))
         self.target=tf.placeholder(tf.float32,[1,count_timesteps,self.configuration["size_output"]])
 
-        self.speed = tf.placeholder(tf.float32,[1,self.configuration["size_output"]])
+        self.input = tf.placeholder(tf.float32, [1, self.configuration["size_output"]])
         self.c_state = tf.placeholder(tf.float32,[1,self.configuration["num_hidden_units"]])
         self.h_state = tf.placeholder(tf.float32,[1,self.configuration["num_hidden_units"]])
-        self.last_state=tf.contrib.rnn.LSTMStateTuple(self.c_state, self.h_state)
+        self.current_state=tf.contrib.rnn.LSTMStateTuple(self.c_state, self.h_state)
 
         inputData=tf.unstack(tf.transpose(self.inputs,[1,0,2]))
         lstm_outputs = []
@@ -160,17 +160,17 @@ class inverseModel:
                                              [self.configuration["num_hidden_units"],self.configuration["size_output"]],
                                              initializer=tf.random_normal_initializer())
                 biases_outputs=vs.get_variable("biases_output",[1,self.configuration["size_output"]],initializer=tf.random_normal_initializer())
-            _speed=self.speed
+            _speed=self.input
             with vs.variable_scope("LSTM") as lstm_scope:
                 jointInput=tf.concat([inputData[0],_speed],1)
-                lstm_output,state=cell(jointInput,self.last_state,lstm_scope) #use last_state
+                lstm_output,state=cell(jointInput, self.current_state, lstm_scope) #use last_state
                 _speed=tf.matmul(lstm_output,output_layer,name="Multiply_lstm_output")+biases_outputs
 
                 #lstm_outputs.append(lstm_output)
                 final_outputs.append(_speed)
                 (self.next_c,self.next_h)=state
 
-                self.next_speed=_speed
+                self.next_output=_speed
 
             with vs.variable_scope("LSTM",reuse=True) as lstm_scope:
                 for index,inp in enumerate(inputData[1:]):
@@ -191,7 +191,7 @@ class inverseModel:
 
         self.c_state = tf.placeholder(tf.float32,[1,self.configuration["num_hidden_units"]])
         self.h_state = tf.placeholder(tf.float32,[1,self.configuration["num_hidden_units"]])
-        self.last_state=tf.contrib.rnn.LSTMStateTuple(self.c_state, self.h_state)
+        self.current_state=tf.contrib.rnn.LSTMStateTuple(self.c_state, self.h_state)
 
         lstm_outputs=[]
         cell=None
@@ -210,7 +210,7 @@ class inverseModel:
 
             with vs.variable_scope("LSTM") as lstm_scope:
                     #initial_state=cell.zero_state(1,tf.float32)
-                    lstm_output,state=cell(inputData[0],self.last_state,lstm_scope) #use last_state
+                    lstm_output,state=cell(inputData[0], self.current_state, lstm_scope) #use last_state
                     lstm_outputs.append(lstm_output)
                     (self.next_c,self.next_h)=state
             with vs.variable_scope("LSTM",reuse=True) as lstm_scope:
@@ -266,11 +266,11 @@ class inverseModel:
     def infer_self_feeding(self,target_outputs,count_iterations):
 
         for i in range(count_iterations):
-            result_c,result_h,result_speed,i,o,r,_,_=self.sess.run([self.next_c,self.next_h,self.next_speed,self.inputs,self.outputs,self.rmse,self.minimizer,self.clipping],
-                                                      feed_dict={self.target:[target_outputs],
-                                                                 self.c_state:self.last_c,
-                                                                 self.h_state:self.last_h,
-                                                                 self.speed:self.last_speed})
+            result_c,result_h,result_speed,i,o,r,_,_=self.sess.run([self.next_c, self.next_h, self.next_output, self.inputs, self.outputs, self.rmse, self.minimizer, self.clipping],
+                                                                   feed_dict={self.target:[target_outputs],
+                                                                              self.c_state:self.last_c,
+                                                                              self.h_state:self.last_h,
+                                                                              self.input:self.last_speed})
 
 
         self.last_c=result_c
@@ -295,7 +295,7 @@ class inverseModel:
     def reset(self):
         self.last_c=np.zeros((1,self.configuration["num_hidden_units"]))
         self.last_h=np.zeros((1,self.configuration["num_hidden_units"]))
-        self.last_speed=np.zeros((1,self.configuration["size_output"]))
+        self.last_speed=np.zeros((1, self.configuration["size_output"]))
         #TODO Maybe self.inputs has to be reinitialized
         #self.inputs=tf.Variable(tf.random_uniform([1,self.count_timesteps,self.configuration["size_input"]],minval=0.,maxval=1.))
 
